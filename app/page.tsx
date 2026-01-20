@@ -74,7 +74,7 @@ export default function Home() {
     const [evaluationLoading, setEvaluationLoading] = useState(false);
 
     const markStepComplete = (step: Step) => {
-        setCompletedSteps((prev) => new Set([...prev, step]));
+        setCompletedSteps((prev) => new Set(Array.from(prev).concat(step)));
     };
 
     // Step 1: Start Consultation
