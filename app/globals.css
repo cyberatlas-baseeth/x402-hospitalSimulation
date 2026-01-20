@@ -1,18 +1,18 @@
 :root {
-  --primary: #0ea5e9;
-  --primary-dark: #0284c7;
-  --secondary: #6366f1;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --background: #0f172a;
-  --surface: #1e293b;
-  --surface-light: #334155;
-  --text: #f8fafc;
-  --text-muted: #94a3b8;
-  --border: #475569;
+  --primary: #0284c7;
+  --primary-dark: #0369a1;
+  --secondary: #0891b2;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --background: #f0f9ff;
+  --surface: #ffffff;
+  --surface-light: #f8fafc;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
   --payment-bg: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  --glass: rgba(255, 255, 255, 0.05);
+  --glass: rgba(14, 165, 233, 0.05);
 }
 
 * {
@@ -477,13 +477,13 @@ body {
 
 /* Disclaimer */
 .disclaimer {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(220, 38, 38, 0.08);
   border: 1px solid var(--danger);
   border-radius: 10px;
   padding: 1rem;
   margin: 1.5rem 0;
   font-size: 0.875rem;
-  color: #fca5a5;
+  color: #991b1b;
 }
 
 .disclaimer-icon {
