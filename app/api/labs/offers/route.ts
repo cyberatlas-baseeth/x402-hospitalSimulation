@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { create402Response, hasValidPayment } from "@/lib/paymentSimulator";
 import { generateLabOffers } from "@/lib/mockData";
 
 /**
@@ -7,25 +6,12 @@ import { generateLabOffers } from "@/lib/mockData";
  * 
  * Laboratory Offers Endpoint
  * 
- * x402 Flow:
- * 1. First request without payment → Returns 402 with payment info
- * 2. Request with X-PAYMENT: simulated → Returns lab offers
- * 
- * Cost: 0.001 USDC (simulated)
+ * This endpoint is FREE - no payment required.
+ * Users can browse lab offers without any cost.
+ * Payment is only required when placing an actual order.
  */
 export async function GET(request: NextRequest) {
-    // Check for payment header
-    if (!hasValidPayment(request.headers)) {
-        const paymentResponse = create402Response(
-            "0.001",
-            "Lab Offers Discovery Fee",
-            "lab-network"
-        );
-
-        return NextResponse.json(paymentResponse, { status: 402 });
-    }
-
-    // Payment received - return lab offers
+    // No payment required for viewing lab offers
     const { searchParams } = new URL(request.url);
     const testsParam = searchParams.get("tests");
 
@@ -39,9 +25,8 @@ export async function GET(request: NextRequest) {
         success: true,
         requested_tests: requestedTests,
         offers: offers,
-        payment_confirmed: true,
-        amount_paid: "0.001 USDC",
+        free_access: true,
         valid_for: "1 hour",
-        note: "Prices shown are in simulated USDC. This is for demonstration only.",
+        note: "Viewing lab offers is free. Payment is required only when placing an order.",
     });
 }

@@ -54,7 +54,6 @@ export default function Home() {
     const [consultationLoading, setConsultationLoading] = useState(false);
 
     // Step 2: Lab Offers
-    const [labPaymentRequired, setLabPaymentRequired] = useState(false);
     const [labOffers, setLabOffers] = useState<LabOffer[]>([]);
     const [selectedLab, setSelectedLab] = useState<LabOffer | null>(null);
     const [labOffersLoading, setLabOffersLoading] = useState(false);
@@ -84,7 +83,6 @@ export default function Home() {
         setSymptoms("");
         setConsultationPaymentRequired(false);
         setConsultationResult(null);
-        setLabPaymentRequired(false);
         setLabOffers([]);
         setSelectedLab(null);
         setOrderPaymentRequired(false);
@@ -130,30 +128,19 @@ export default function Home() {
         }
     };
 
-    // Step 2: Get Lab Offers
-    const getLabOffers = async (withPayment: boolean = false) => {
+    // Step 2: Get Lab Offers (FREE - no payment required)
+    const getLabOffers = async () => {
         if (!consultationResult) return;
 
         setLabOffersLoading(true);
 
-        const headers: HeadersInit = {};
-        if (withPayment) {
-            headers["X-PAYMENT"] = "simulated";
-        }
-
         const testsParam = encodeURIComponent(consultationResult.recommended_tests.join(","));
 
         try {
-            const res = await fetch(`/api/labs/offers?tests=${testsParam}`, {
-                headers,
-            });
-
+            const res = await fetch(`/api/labs/offers?tests=${testsParam}`);
             const data = await res.json();
 
-            if (res.status === 402) {
-                setLabPaymentRequired(true);
-            } else if (data.success) {
-                setLabPaymentRequired(false);
+            if (data.success) {
                 setLabOffers(data.offers);
             }
         } catch (error) {
@@ -432,47 +419,21 @@ export default function Home() {
 
                     {isStepActive(2) && (
                         <div className="step-content">
-                            {labPaymentRequired && (
-                                <div className="payment-banner">
-                                    <h3>🔒 Payment Required (HTTP 402)</h3>
-                                    <div className="price">
-                                        0.001 <span className="currency">USDC</span>
-                                    </div>
-                                    <p>Simulated payment to access lab offers</p>
-                                </div>
-                            )}
-
                             {labOffers.length === 0 && (
                                 <div className="button-group">
-                                    {!labPaymentRequired ? (
-                                        <button
-                                            className="btn btn-primary"
-                                            onClick={() => getLabOffers(false)}
-                                            disabled={labOffersLoading}
-                                        >
-                                            {labOffersLoading ? (
-                                                <span className="loading">
-                                                    <span className="spinner"></span> Loading...
-                                                </span>
-                                            ) : (
-                                                "Get Lab Offers"
-                                            )}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="btn btn-warning"
-                                            onClick={() => getLabOffers(true)}
-                                            disabled={labOffersLoading}
-                                        >
-                                            {labOffersLoading ? (
-                                                <span className="loading">
-                                                    <span className="spinner"></span> Loading...
-                                                </span>
-                                            ) : (
-                                                "💳 Simulate Payment (0.001 USDC)"
-                                            )}
-                                        </button>
-                                    )}
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => getLabOffers()}
+                                        disabled={labOffersLoading}
+                                    >
+                                        {labOffersLoading ? (
+                                            <span className="loading">
+                                                <span className="spinner"></span> Loading...
+                                            </span>
+                                        ) : (
+                                            "🔍 Get Lab Offers (Free)"
+                                        )}
+                                    </button>
                                 </div>
                             )}
 
