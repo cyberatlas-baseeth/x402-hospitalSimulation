@@ -77,6 +77,23 @@ export default function Home() {
         setCompletedSteps((prev) => new Set(Array.from(prev).concat(step)));
     };
 
+    // Restart simulation
+    const restartSimulation = () => {
+        setCurrentStep(1);
+        setCompletedSteps(new Set());
+        setSymptoms("");
+        setConsultationPaymentRequired(false);
+        setConsultationResult(null);
+        setLabPaymentRequired(false);
+        setLabOffers([]);
+        setSelectedLab(null);
+        setOrderPaymentRequired(false);
+        setTestResults([]);
+        setDataOffer(null);
+        setAccessToken(null);
+        setEvaluationResult(null);
+    };
+
     // Step 1: Start Consultation
     const startConsultation = async (withPayment: boolean = false) => {
         setConsultationLoading(true);
@@ -297,6 +314,13 @@ export default function Home() {
                     Experience pay-per-request healthcare interactions using the x402 protocol
                 </p>
                 <span className="badge">🔬 Educational Demo</span>
+                {completedSteps.size > 0 && (
+                    <div style={{ marginTop: "1rem" }}>
+                        <button className="btn btn-secondary" onClick={restartSimulation}>
+                            🔄 Restart Simulation
+                        </button>
+                    </div>
+                )}
             </header>
 
             <div className="steps">
