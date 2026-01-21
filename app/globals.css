@@ -943,3 +943,203 @@ body {
 .sim-test-result.high {
   border-left: 3px solid var(--danger);
 }
+
+/* Balance Display */
+.balance-display {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #00ff41;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 20px rgba(0, 255, 65, 0.2);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  z-index: 100;
+}
+
+.balance-label {
+  margin-right: 0.5rem;
+  opacity: 0.8;
+}
+
+.balance-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Matrix Style Header */
+.matrix-style {
+  background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  color: #00ff41;
+}
+
+.matrix-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.matrix-title h1 {
+  font-family: 'Courier New', monospace;
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, #00ff41 0%, #00d4aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: matrixGlow 2s ease-in-out infinite alternate;
+}
+
+.matrix-bracket {
+  font-size: 2.5rem;
+  color: #00ff41;
+  opacity: 0.6;
+}
+
+.matrix-subtitle {
+  color: rgba(0, 255, 65, 0.7);
+  margin-top: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+@keyframes matrixGlow {
+  from {
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+  }
+
+  to {
+    text-shadow: 0 0 20px rgba(0, 255, 65, 0.8), 0 0 30px rgba(0, 255, 65, 0.4);
+  }
+}
+
+/* Expert Selection */
+.expert-selection {
+  text-align: center;
+  padding: 2rem;
+}
+
+.expert-selection h2 {
+  margin-bottom: 0.5rem;
+}
+
+.expert-cards {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.expert-card {
+  background: var(--surface);
+  border: 3px solid var(--border);
+  border-radius: 20px;
+  padding: 1.5rem;
+  width: 160px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.expert-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.expert-emoji {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 1rem;
+  color: white;
+}
+
+.expert-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.expert-price {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Health Analysis */
+.health-analysis {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid var(--success);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.health-analysis h3 {
+  color: var(--success);
+  margin-bottom: 1rem;
+}
+
+.health-analysis h4 {
+  margin: 1rem 0 0.5rem;
+  color: var(--text);
+}
+
+.analysis-interpretation {
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.analysis-guidance {
+  list-style: none;
+  padding: 0;
+}
+
+.analysis-guidance li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: var(--text-muted);
+}
+
+.analysis-guidance li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--success);
+  font-weight: bold;
+}
+
+/* Responsive for new components */
+@media (max-width: 768px) {
+  .balance-display {
+    position: static;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .expert-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .expert-card {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .matrix-title h1 {
+    font-size: 1.75rem;
+  }
+
+  .matrix-bracket {
+    font-size: 1.75rem;
+  }
+}
