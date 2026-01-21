@@ -1,10 +1,10 @@
 # x402 Healthcare Payment Simulation
 
-A Next.js application demonstrating the **x402 protocol** for pay-per-request healthcare interactions. This is an educational simulation showcasing how micropayments could enable new models for healthcare data exchange.
+A Next.js application demonstrating the **x402 protocol** for pay-per-request healthcare interactions. This project showcases two distinct simulation experiences, visual aesthetics inspired by futuristic "Matrix" themes, and multi-agent AI interactions.
 
-![x402 Protocol](https://img.shields.io/badge/Protocol-x402-blue)
+![x402 Protocol](https://img.shields.io/badge/Protocol-x402-00ff41)
 ![Next.js](https://img.shields.io/badge/Next.js-14+-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue)
+![Aesthetics](https://img.shields.io/badge/Aesthetics-Matrix--Core-00ff41)
 ![Vercel Ready](https://img.shields.io/badge/Vercel-Ready-black)
 
 ## ⚠️ Important Disclaimer
@@ -16,6 +16,24 @@ A Next.js application demonstrating the **x402 protocol** for pay-per-request he
 - ❌ No real health data processing
 - ✅ Educational demonstration of x402 concepts
 - ✅ Simulated payment flows with mock data
+
+---
+
+## 🎮 Simulation Experiences
+
+Users can choose between two ways to experience the x402 protocol:
+
+### 1. 🎭 Simulation Version (Visual Experience)
+A rich, terminal-inspired chat interface where you interact with specialized AI experts:
+- **Expert Selection**: Choose between **Grok**, **ChatGPT**, or **Claude** (each with custom avatars).
+- **Interactive Chat**: Real-time typing effects and visual message flow.
+- **Dynamic Balance**: Watch your USDC balance update in real-time as you pay for services or get paid for your data.
+
+### 2. 📝 Prompt Version (Workflow Focus)
+A structured, step-by-step workflow for users who want to see the programmatic flow:
+- Clear step-by-step progress tracking.
+- Detailed JSON-like interaction responses.
+- Integrated x402 status code demonstration.
 
 ---
 
@@ -33,102 +51,42 @@ The **x402 protocol** leverages the HTTP 402 "Payment Required" status code to e
 5. Server validates payment and returns resource
 ```
 
-In this simulation, we use a `X-PAYMENT: simulated` header to mock the payment flow.
+---
+
+## 🏗️ Project Structure
+
+```
+x402-hospitalsim/
+├── app/
+│   ├── prompt/             # structured workflow simulation
+│   ├── simulation/         # visual chat-based simulation
+│   ├── api/                # x402 compliant API routes
+│   │   ├── assistant/      # AI consultation logic
+│   │   ├── labs/           # laboratory services
+│   │   └── data-evaluator/ # data monetization endpoints
+│   ├── globals.css         # matrix-style design system
+│   ├── page.tsx            # dynamic landing page
+│   └── layout.tsx          # root layout
+├── lib/
+│   ├── paymentSimulator.ts # x402 core logic
+│   └── mockData.ts         # healthcare data generators
+├── public/
+│   └── avatars/            # AI expert visual assets
+└── package.json
+```
 
 ---
 
 ## 🏥 Application Flow
 
-This simulation demonstrates a multi-agent healthcare interaction:
+The simulation demonstrates a multi-agent healthcare economy:
 
-```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│     Patient     │────▶│  AI Health       │────▶│   Laboratory    │
-│   (Human User)  │     │  Assistant       │     │   Agents        │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-                                                          │
-                        ┌──────────────────┐              ▼
-                        │  Data Evaluation │◀─────────────┘
-                        │  Bot (Pays User) │
-                        └──────────────────┘
-```
+1. **AI Consultation**: Describe symptoms to an AI Expert (0.005 USDC cost).
+2. **Lab Discovery**: AI identifies needed tests and fetches real-time lab bids.
+3. **Lab Fulfillment**: Pay for tests and receive anonymized results.
+4. **Data Monetization**: Researchers (Bots) offer to BUY your data (User gets paid!).
+5. **Health Analysis**: Get a final AI analysis report with lifestyle recommendations.
 
-### Steps
-
-1. **AI Health Assistant Consultation** (0.002 USDC)
-   - Patient describes symptoms
-   - Receives general observations and recommended tests
-
-2. **Laboratory Offers** (0.001 USDC)
-   - Browse multiple lab offers
-   - Compare prices and turnaround times
-
-3. **Lab Test Order** (Variable USDC)
-   - Place order with selected lab
-   - Receive mock test results
-
-4. **Data Evaluation Offer** (Reverse Payment)
-   - Bot offers to BUY patient's anonymized data
-   - Patient retains data ownership
-
-5. **Evaluation Results**
-   - Access analysis after accepting payment
-   - Receive lifestyle guidance (non-diagnostic)
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/cyberatlas-baseeth/x402-hospitalSimulation.git
-
-# Navigate to project
-cd x402-hospitalSimulation
-
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 📁 Project Structure
-
-```
-x402-hospitalsim/
-├── app/
-│   ├── api/
-│   │   ├── assistant/
-│   │   │   └── consult/route.ts    # AI consultation endpoint
-│   │   ├── labs/
-│   │   │   ├── offers/route.ts     # Lab offers endpoint
-│   │   │   └── order/route.ts      # Lab order endpoint
-│   │   └── data-evaluator/
-│   │       ├── offer/route.ts      # Data purchase offer
-│   │       ├── accept/route.ts     # Accept offer endpoint
-│   │       └── result/route.ts     # Evaluation results
-│   ├── globals.css                 # Global styles
-│   ├── layout.tsx                  # Root layout
-│   └── page.tsx                    # Main application page
-├── lib/
-│   ├── paymentSimulator.ts         # x402 simulation utilities
-│   └── mockData.ts                 # Mock data generators
-├── package.json
-├── tsconfig.json
-└── next.config.js
-```
 
 ---
 
