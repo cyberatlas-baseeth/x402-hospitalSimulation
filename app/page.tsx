@@ -36,7 +36,11 @@ export default function Home() {
                     </Link>
 
                     <Link href="/simulation" className="version-card simulation">
-                        <div className="version-icon">🎭</div>
+                        <div className="version-icon matrix-logo-sm">
+                            <span className="matrix-bracket-sm">[</span>
+                            <span className="matrix-text-sm">x402</span>
+                            <span className="matrix-bracket-sm">]</span>
+                        </div>
                         <h3>Simulation Version</h3>
                         <p>
                             Animated visual experience with character avatars
