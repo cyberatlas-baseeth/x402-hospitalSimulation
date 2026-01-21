@@ -73,6 +73,11 @@ export default function Home() {
     const [evaluationResult, setEvaluationResult] = useState<EvaluationResult | null>(null);
     const [evaluationLoading, setEvaluationLoading] = useState(false);
 
+    // Balance
+    const [balance, setBalance] = useState(1.0);
+    const deductBalance = (amount: number) => setBalance(prev => Math.max(0, prev - amount));
+    const addBalance = (amount: number) => setBalance(prev => prev + amount);
+
     const markStepComplete = (step: Step) => {
         setCompletedSteps((prev) => new Set(Array.from(prev).concat(step)));
     };
@@ -91,6 +96,7 @@ export default function Home() {
         setDataOffer(null);
         setAccessToken(null);
         setEvaluationResult(null);
+        setBalance(1.0);
     };
 
     // Step 1: Start Consultation
@@ -117,6 +123,9 @@ export default function Home() {
             if (res.status === 402) {
                 setConsultationPaymentRequired(true);
             } else if (data.success) {
+                if (withPayment) {
+                    deductBalance(0.005); // Consultation fee
+                }
                 setConsultationPaymentRequired(false);
                 setConsultationResult(data.analysis);
                 markStepComplete(1);
@@ -188,6 +197,9 @@ export default function Home() {
             if (res.status === 402) {
                 setOrderPaymentRequired(true);
             } else if (data.success) {
+                if (withPayment && selectedLab) {
+                    deductBalance(parseFloat(selectedLab.price));
+                }
                 setOrderPaymentRequired(false);
                 setTestResults(data.results);
                 markStepComplete(3);
@@ -248,6 +260,7 @@ export default function Home() {
             const data = await res.json();
 
             if (data.success) {
+                addBalance(parseFloat(dataOffer.offer_price));
                 setAccessToken(data.access_token);
                 markStepComplete(4);
                 setCurrentStep(5);
@@ -297,6 +310,20 @@ export default function Home() {
     return (
         <main className="container">
             <Link href="/" className="back-link">← Back to Home</Link>
+
+            {/* Matrix-style Balance Header */}
+            <div className="matrix-header">
+                <div className="matrix-logo">
+                    <span className="matrix-bracket">[</span>
+                    <span className="matrix-text">x402</span>
+                    <span className="matrix-bracket">]</span>
+                </div>
+                <div className="balance-display">
+                    <span className="balance-label">BALANCE</span>
+                    <span className="balance-amount">{balance.toFixed(3)}</span>
+                    <span className="balance-currency">USDC</span>
+                </div>
+            </div>
 
             <header className="header">
                 <h1>x402 Healthcare Simulation</h1>
