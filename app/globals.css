@@ -1050,21 +1050,33 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
-.expert-emoji {
-  width: 60px;
-  height: 60px;
+.expert-avatar-container {
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 1.5rem;
+  border: 4px solid var(--border);
+  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  margin: 0 auto 1rem;
-  color: white;
+  transition: all 0.3s ease;
+}
+
+.expert-card:hover .expert-avatar-container {
+  border-color: inherit;
+  transform: scale(1.05);
+}
+
+.expert-avatar-img {
+  object-fit: cover;
 }
 
 .expert-card h3 {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   margin-bottom: 0.5rem;
+  font-weight: 700;
 }
 
 .expert-price {

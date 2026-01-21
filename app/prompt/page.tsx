@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 // Types
 interface LabOffer {
@@ -295,6 +296,8 @@ export default function Home() {
 
     return (
         <main className="container">
+            <Link href="/" className="back-link">← Back to Home</Link>
+
             <header className="header">
                 <h1>x402 Healthcare Simulation</h1>
                 <p className="subtitle">

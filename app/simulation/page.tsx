@@ -31,7 +31,7 @@ interface Message {
 interface AIExpert {
     id: string;
     name: string;
-    emoji: string;
+    avatar: string;
     color: string;
     price: string;
 }
@@ -39,12 +39,12 @@ interface AIExpert {
 type SimStep = 0 | 1 | 2 | 3 | 4 | 5;
 
 const AI_EXPERTS: AIExpert[] = [
-    { id: "grok", name: "Grok", emoji: "🤖", color: "#1DA1F2", price: "0.005" },
-    { id: "chatgpt", name: "ChatGPT", emoji: "🧠", color: "#10a37f", price: "0.008" },
-    { id: "claude", name: "Claude", emoji: "🎭", color: "#D97757", price: "0.006" },
+    { id: "grok", name: "Grok", avatar: "/avatars/grok.png", color: "#1DA1F2", price: "0.005" },
+    { id: "chatgpt", name: "ChatGPT", avatar: "/avatars/chatgpt.png", color: "#10a37f", price: "0.008" },
+    { id: "claude", name: "Claude", avatar: "/avatars/claude.png", color: "#D97757", price: "0.006" },
 ];
 
-const AVATARS = {
+const AVATARS: Record<string, string> = {
     patient: "/avatars/patient.png",
     doctor: "/avatars/doctor.png",
     labtech: "/avatars/labtech.png",
@@ -100,6 +100,7 @@ export default function SimulationPage() {
         deductBalance(price);
 
         NAMES.doctor = expert.name;
+        AVATARS.doctor = expert.avatar;
 
         await new Promise((r) => setTimeout(r, 500));
         addMessage("patient", `I'd like to consult with ${expert.name} today.`);
@@ -281,6 +282,8 @@ export default function SimulationPage() {
         setDataOfferPrice("");
         setShowComplete(false);
         setHealthAnalysis(null);
+        NAMES.doctor = "AI Doctor";
+        AVATARS.doctor = "/avatars/doctor.png";
     };
 
     return (
@@ -317,8 +320,14 @@ export default function SimulationPage() {
                                 style={{ borderColor: expert.color }}
                                 onClick={() => !actionLoading && selectExpert(expert)}
                             >
-                                <div className="expert-emoji" style={{ background: expert.color }}>
-                                    {expert.emoji}
+                                <div className="expert-avatar-container">
+                                    <Image
+                                        src={expert.avatar}
+                                        alt={expert.name}
+                                        width={80}
+                                        height={80}
+                                        className="expert-avatar-img"
+                                    />
                                 </div>
                                 <h3>{expert.name}</h3>
                                 <div className="expert-price">{expert.price} USDC</div>
