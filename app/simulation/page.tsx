@@ -227,16 +227,31 @@ export default function SimulationPage() {
         setActionLoading(false);
     };
 
+    const [accessToken, setAccessToken] = useState<string>("");
+
     // Step 4b: Accept offer
     const acceptDataOffer = async () => {
         setActionLoading(true);
         addMessage("patient", "I accept your offer.");
 
-        const price = parseFloat(dataOfferPrice);
-        addBalance(price);
+        try {
+            const res = await fetch("/api/data-evaluator/accept", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ offer_id: "data-sell-123", offer_price: dataOfferPrice }),
+            });
+            const data = await res.json();
 
-        await simulateTyping("databot", `Thank you! I've sent ${dataOfferPrice} USDC to your wallet. Let me analyze your data...`, 1500);
-        setStep(5);
+            if (data.success) {
+                setAccessToken(data.access_token);
+                const price = parseFloat(dataOfferPrice);
+                addBalance(price);
+                await simulateTyping("databot", `Thank you! I've sent ${dataOfferPrice} USDC to your wallet. Let me analyze your data...`, 1500);
+                setStep(5);
+            }
+        } catch (error) {
+            console.error(error);
+        }
         setActionLoading(false);
     };
 
@@ -246,14 +261,19 @@ export default function SimulationPage() {
 
         try {
             const res = await fetch(`/api/data-evaluator/result?results=${encodeURIComponent(JSON.stringify(testResults))}`, {
-                headers: { "X-ACCESS-TOKEN": "sim-token-12345" },
+                headers: { "X-ACCESS-TOKEN": accessToken || "access_sim_default" },
             });
             const data = await res.json();
 
             if (data.success) {
                 setHealthAnalysis({
                     interpretation: data.interpretation,
-                    guidance: data.lifestyle_guidance || []
+                    guidance: data.lifestyle_guidance || [
+                        "Maintain a balanced diet rich in whole foods.",
+                        "Aim for 7-9 hours of quality sleep per night.",
+                        "Engage in at least 30 minutes of moderate exercise daily.",
+                        "Stay hydrated by drinking plenty of water throughout the day."
+                    ]
                 });
 
                 await simulateTyping(
@@ -261,12 +281,26 @@ export default function SimulationPage() {
                     `Analysis complete! ${data.interpretation}`,
                     2000
                 );
-                await simulateTyping("doctor", "Thank you for using our x402 healthcare simulation! This demonstrates how pay-per-request APIs work.", 2000);
-                setShowComplete(true);
+            } else {
+                throw new Error("Analysis failed");
             }
         } catch (error) {
             console.error(error);
+            // Fallback Health Analysis if API fails
+            setHealthAnalysis({
+                interpretation: "Based on our general health patterns, we recommend focusing on preventative care and consistent monitoring of your vital signs.",
+                guidance: [
+                    "General: Stay active with at least 150 minutes of moderate activity per week.",
+                    "Nutrition: Increase intake of leafy greens and reduce processed sugars.",
+                    "Sleep: Establish a consistent sleep-wake cycle even on weekends.",
+                    "Stress: Practice mindfulness or meditation for 10 minutes daily.",
+                    "Monitoring: Regularly check blood pressure and keep a symptom diary."
+                ]
+            });
+            await simulateTyping("databot", "I've completed a general analysis based on standard health protocols.", 1500);
         }
+        await simulateTyping("doctor", "This demonstrates how the x402 protocol enables secure, automated health data transactions with instant analysis.", 2000);
+        setShowComplete(true);
         setActionLoading(false);
     };
 
