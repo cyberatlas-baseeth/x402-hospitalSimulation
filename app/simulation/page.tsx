@@ -604,7 +604,9 @@ export default function SimulationPage() {
                         <div className="payment-flow-diagram">
                             {/* Client */}
                             <div className="flow-actor client">
-                                <div className="actor-icon">🍌</div>
+                                <div className="actor-icon">
+                                    <Image src="/banana-client.svg" alt="Client Banana" width={60} height={60} />
+                                </div>
                                 <span className="actor-label">Client</span>
                             </div>
 
@@ -649,7 +651,9 @@ export default function SimulationPage() {
 
                             {/* Server */}
                             <div className="flow-actor server">
-                                <div className="actor-icon">🍌</div>
+                                <div className="actor-icon">
+                                    <Image src="/banana-server.svg" alt="Server Banana" width={60} height={60} />
+                                </div>
                                 <span className="actor-label">Server</span>
                             </div>
                         </div>

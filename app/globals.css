@@ -1302,6 +1302,8 @@ body {
   border: 3px solid rgba(0, 255, 65, 0.3);
   box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
   transition: all 0.3s ease;
+  overflow: hidden;
+  padding: 5px;
 }
 
 .flow-actor.client .actor-icon {

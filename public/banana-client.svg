@@ -1,0 +1,12 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Laptop Body -->
+  <rect x="20" y="25" width="60" height="40" rx="3" fill="#1E293B" stroke="#3B82F6" stroke-width="2"/>
+  <rect x="25" y="30" width="50" height="30" rx="1" fill="#0F172A"/>
+  <!-- Screen Lines (Code) -->
+  <path d="M30 35H45M30 40H55M30 45H40" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Keyboard/Base -->
+  <path d="M15 65H85L80 75H20L15 65Z" fill="#334155" stroke="#3B82F6" stroke-width="2"/>
+  <rect x="40" y="67" width="20" height="4" rx="1" fill="#3B82F6" opacity="0.4"/>
+  <!-- Glow -->
+  <circle cx="50" cy="45" r="20" fill="#3B82F6" opacity="0.1"/>
+</svg>
