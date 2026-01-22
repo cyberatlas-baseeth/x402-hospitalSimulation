@@ -574,9 +574,12 @@ export default function SimulationPage() {
 
             {/* Payment Flow Visualization Modal */}
             {showPaymentFlow && (
-                <div className="payment-flow-overlay">
-                    <div className="payment-flow-modal">
-                        <h3 className="payment-flow-title">🔐 x402 Payment Protocol</h3>
+                <div className="payment-flow-overlay" onClick={() => setShowPaymentFlow(false)}>
+                    <div className="payment-flow-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="payment-flow-header">
+                            <h3 className="payment-flow-title">🔐 x402 Payment Protocol</h3>
+                            <button className="payment-flow-close" onClick={() => setShowPaymentFlow(false)}>✕</button>
+                        </div>
                         <p className="payment-flow-endpoint">Endpoint: <code>{paymentFlowEndpoint}</code></p>
                         
                         <div className="payment-flow-diagram">
@@ -593,7 +596,7 @@ export default function SimulationPage() {
                                     <div className="message-arrow right">→</div>
                                     <div className="message-content">
                                         <span className="message-method">POST</span>
-                                        <span className="message-text">Request (no payment)</span>
+                                        <span className="message-text">Request (no payment header)</span>
                                     </div>
                                 </div>
 
@@ -603,7 +606,6 @@ export default function SimulationPage() {
                                     <div className="message-content">
                                         <span className="message-status">402</span>
                                         <span className="message-text">Payment Required</span>
-                                        <code className="message-code">{`{ price: "${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (selectedLab?.price || "0.015")} USDC" }`}</code>
                                     </div>
                                 </div>
 
@@ -613,7 +615,6 @@ export default function SimulationPage() {
                                     <div className="message-content">
                                         <span className="message-method">POST</span>
                                         <span className="message-text">+ X-PAYMENT: simulated</span>
-                                        <code className="message-code">💳 Payment attached</code>
                                     </div>
                                 </div>
 
@@ -623,7 +624,6 @@ export default function SimulationPage() {
                                     <div className="message-content">
                                         <span className="message-status success">200</span>
                                         <span className="message-text">Success!</span>
-                                        <code className="message-code">{`{ results: [...] }`}</code>
                                     </div>
                                 </div>
                             </div>
@@ -635,12 +635,34 @@ export default function SimulationPage() {
                             </div>
                         </div>
 
+                        {/* HTTP 402 Response Code Block */}
+                        {paymentFlowStep >= 2 && (
+                            <div className="http-response-block">
+                                <div className="response-header">
+                                    <span className="response-status-badge error">HTTP 402 Response</span>
+                                </div>
+                                <pre className="response-code">{`{
+  "status": 402,
+  "payment_info": {
+    "price": "${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (selectedLab?.price || "0.015")}",
+    "currency": "USDC",
+    "payment_required": true,
+    "description": "${paymentFlowEndpoint.includes("consult") ? "AI Health Assistant Consultation Fee" : "Lab Test Order"}",
+    "recipient": "${paymentFlowEndpoint.includes("consult") ? "ai-health-assistant" : "lab-" + (selectedLab?.lab_id || "001")}"
+  },
+  "message": "Payment of ${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (selectedLab?.price || "0.015")} USDC required to access this resource."
+}`}</pre>
+                            </div>
+                        )}
+
                         <div className="payment-flow-status">
                             {paymentFlowStep === 1 && <span className="status-text">📤 Sending request...</span>}
                             {paymentFlowStep === 2 && <span className="status-text warning">⚠️ Payment required! HTTP 402</span>}
                             {paymentFlowStep === 3 && <span className="status-text">💳 Attaching payment proof...</span>}
                             {paymentFlowStep === 4 && <span className="status-text success">✅ Payment verified! Receiving data...</span>}
                         </div>
+
+                        <p className="payment-flow-hint">Click anywhere outside to close</p>
                     </div>
                 </div>
             )}
