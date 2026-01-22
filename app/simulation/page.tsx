@@ -118,10 +118,25 @@ export default function SimulationPage() {
 
     // Step 0: Select AI Expert
     const selectExpert = async (expert: AIExpert) => {
-        setSelectedExpert(expert);
         setActionLoading(true);
+        setSelectedExpert(expert);
 
         const price = parseFloat(expert.price);
+
+        // Start payment flow visualization for expert selection
+        setPaymentFlowEndpoint(`/api/expert/${expert.id}`);
+        setShowPaymentFlow(true);
+        setPaymentFlowStep(1);
+        await new Promise(r => setTimeout(r, 600));
+        setPaymentFlowStep(2);
+        await new Promise(r => setTimeout(r, 800));
+        setPaymentFlowStep(3);
+        await new Promise(r => setTimeout(r, 600));
+        setPaymentFlowStep(4);
+        
+        // Wait for user to close the modal before continuing
+        await waitForPaymentFlowClose();
+
         deductBalance(price);
 
         NAMES.doctor = expert.name;
@@ -667,13 +682,13 @@ export default function SimulationPage() {
                                 <pre className="response-code">{`{
   "status": 402,
   "payment_info": {
-    "price": "${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (selectedLab?.price || "0.015")}",
+    "price": "${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (paymentFlowEndpoint.includes("expert") ? selectedExpert?.price : (selectedLab?.price || "0.015"))}",
     "currency": "USDC",
     "payment_required": true,
-    "description": "${paymentFlowEndpoint.includes("consult") ? "AI Health Assistant Consultation Fee" : "Lab Test Order"}",
-    "recipient": "${paymentFlowEndpoint.includes("consult") ? "ai-health-assistant" : "lab-" + (selectedLab?.lab_id || "001")}"
+    "description": "${paymentFlowEndpoint.includes("consult") ? "AI Health Assistant Consultation Fee" : (paymentFlowEndpoint.includes("expert") ? `AI Expert Selection - ${selectedExpert?.name}` : "Lab Test Order")}",
+    "recipient": "${paymentFlowEndpoint.includes("consult") ? "ai-health-assistant" : (paymentFlowEndpoint.includes("expert") ? `expert-${selectedExpert?.id}` : "lab-" + (selectedLab?.lab_id || "001"))}"
   },
-  "message": "Payment of ${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (selectedLab?.price || "0.015")} USDC required to access this resource."
+  "message": "Payment of ${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (paymentFlowEndpoint.includes("expert") ? selectedExpert?.price : (selectedLab?.price || "0.015"))} USDC required to access this resource."
 }`}</pre>
                             </div>
                         )}
