@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -76,6 +76,26 @@ export default function SimulationPage() {
     const [showPaymentFlow, setShowPaymentFlow] = useState(false);
     const [paymentFlowStep, setPaymentFlowStep] = useState(0);
     const [paymentFlowEndpoint, setPaymentFlowEndpoint] = useState("");
+    
+    // Ref to resolve the payment flow promise when user closes modal
+    const paymentFlowResolveRef = useRef<(() => void) | null>(null);
+
+    // Wait for user to close the payment flow modal
+    const waitForPaymentFlowClose = (): Promise<void> => {
+        return new Promise((resolve) => {
+            paymentFlowResolveRef.current = resolve;
+        });
+    };
+
+    // Close payment flow and continue the process
+    const closePaymentFlow = () => {
+        setShowPaymentFlow(false);
+        setPaymentFlowStep(0);
+        if (paymentFlowResolveRef.current) {
+            paymentFlowResolveRef.current();
+            paymentFlowResolveRef.current = null;
+        }
+    };
 
     const deductBalance = (amount: number) => {
         setBalance((prev) => Math.max(0, prev - amount));
@@ -134,8 +154,12 @@ export default function SimulationPage() {
         await new Promise(r => setTimeout(r, 800));
         setPaymentFlowStep(3);
         await new Promise(r => setTimeout(r, 600));
+        setPaymentFlowStep(4);
+        
+        // Wait for user to close the modal before continuing
+        await waitForPaymentFlowClose();
 
-        // Deduct consultation fee
+        // Deduct consultation fee after user confirms
         deductBalance(parseFloat(CONSULTATION_FEE));
 
         try {
@@ -145,11 +169,6 @@ export default function SimulationPage() {
                 body: JSON.stringify({ symptoms: "fatigue, headache, trouble sleeping" }),
             });
             const data = await res.json();
-
-            setPaymentFlowStep(4);
-            await new Promise(r => setTimeout(r, 500));
-            setShowPaymentFlow(false);
-            setPaymentFlowStep(0);
 
             if (data.success) {
                 await simulateTyping(
@@ -161,7 +180,6 @@ export default function SimulationPage() {
             }
         } catch (error) {
             console.error(error);
-            setShowPaymentFlow(false);
         }
         setActionLoading(false);
     };
@@ -213,7 +231,12 @@ export default function SimulationPage() {
         await new Promise(r => setTimeout(r, 800));
         setPaymentFlowStep(3);
         await new Promise(r => setTimeout(r, 600));
+        setPaymentFlowStep(4);
 
+        // Wait for user to close the modal before continuing
+        await waitForPaymentFlowClose();
+
+        // Deduct balance after user confirms
         deductBalance(price);
 
         try {
@@ -228,11 +251,6 @@ export default function SimulationPage() {
             });
             const data = await res.json();
 
-            setPaymentFlowStep(4);
-            await new Promise(r => setTimeout(r, 500));
-            setShowPaymentFlow(false);
-            setPaymentFlowStep(0);
-
             if (data.success) {
                 setTestResults(data.results);
                 await simulateTyping("labtech", "Payment received! Here are your test results:", 2000);
@@ -240,7 +258,6 @@ export default function SimulationPage() {
             }
         } catch (error) {
             console.error(error);
-            setShowPaymentFlow(false);
         }
         setActionLoading(false);
     };
@@ -574,11 +591,13 @@ export default function SimulationPage() {
 
             {/* Payment Flow Visualization Modal */}
             {showPaymentFlow && (
-                <div className="payment-flow-overlay" onClick={() => setShowPaymentFlow(false)}>
+                <div className="payment-flow-overlay" onClick={paymentFlowStep === 4 ? closePaymentFlow : undefined}>
                     <div className="payment-flow-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="payment-flow-header">
                             <h3 className="payment-flow-title">🔐 x402 Payment Protocol</h3>
-                            <button className="payment-flow-close" onClick={() => setShowPaymentFlow(false)}>✕</button>
+                            {paymentFlowStep === 4 && (
+                                <button className="payment-flow-close" onClick={closePaymentFlow}>✕</button>
+                            )}
                         </div>
                         <p className="payment-flow-endpoint">Endpoint: <code>{paymentFlowEndpoint}</code></p>
                         
@@ -662,7 +681,9 @@ export default function SimulationPage() {
                             {paymentFlowStep === 4 && <span className="status-text success">✅ Payment verified! Receiving data...</span>}
                         </div>
 
-                        <p className="payment-flow-hint">Click anywhere outside to close</p>
+                        {paymentFlowStep === 4 && (
+                            <p className="payment-flow-hint">✨ Click anywhere or press ✕ to continue</p>
+                        )}
                     </div>
                 </div>
             )}
