@@ -1190,3 +1190,307 @@ body {
 .version-card.simulation:hover .matrix-text-sm {
   animation: matrixGlow 1s ease-in-out infinite alternate;
 }
+
+/* Payment Flow Visualization */
+.payment-flow-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.payment-flow-modal {
+  background: linear-gradient(145deg, #0d1117 0%, #161b22 100%);
+  border: 2px solid rgba(0, 255, 65, 0.4);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 700px;
+  width: 90%;
+  box-shadow: 0 0 60px rgba(0, 255, 65, 0.2);
+}
+
+.payment-flow-title {
+  text-align: center;
+  color: #00ff41;
+  font-family: 'Courier New', monospace;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+.payment-flow-endpoint {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.payment-flow-endpoint code {
+  background: rgba(0, 255, 65, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  color: #00ff41;
+  font-family: 'Courier New', monospace;
+}
+
+.payment-flow-diagram {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.flow-actor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 100px;
+}
+
+.actor-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  border: 3px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+  transition: all 0.3s ease;
+}
+
+.flow-actor.client .actor-icon {
+  border-color: #3b82f6;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.flow-actor.server .actor-icon {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.actor-label {
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.flow-connection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 1rem;
+}
+
+.flow-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  opacity: 0.3;
+  transform: scale(0.95);
+  transition: all 0.4s ease;
+}
+
+.flow-message.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.flow-message.request {
+  border-left: 3px solid #3b82f6;
+}
+
+.flow-message.response {
+  border-right: 3px solid #8b5cf6;
+  flex-direction: row-reverse;
+}
+
+.flow-message.response .message-content {
+  text-align: right;
+}
+
+.message-arrow {
+  font-size: 1.5rem;
+  font-weight: bold;
+  animation: none;
+}
+
+.flow-message.active .message-arrow {
+  animation: arrowPulse 0.6s ease infinite;
+}
+
+.message-arrow.right {
+  color: #3b82f6;
+}
+
+.message-arrow.left {
+  color: #8b5cf6;
+}
+
+@keyframes arrowPulse {
+  0%, 100% { opacity: 1; transform: translateX(0); }
+  50% { opacity: 0.5; transform: translateX(3px); }
+}
+
+.flow-message.response .message-arrow {
+  animation-name: arrowPulseLeft;
+}
+
+@keyframes arrowPulseLeft {
+  0%, 100% { opacity: 1; transform: translateX(0); }
+  50% { opacity: 0.5; transform: translateX(-3px); }
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.message-method {
+  background: #3b82f6;
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.message-status {
+  background: #ef4444;
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: fit-content;
+  font-family: 'Courier New', monospace;
+}
+
+.message-status.success {
+  background: #22c55e;
+}
+
+.flow-message.response .message-status {
+  margin-left: auto;
+}
+
+.message-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+}
+
+.message-code {
+  background: rgba(0, 0, 0, 0.3);
+  color: #00ff41;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: 'Courier New', monospace;
+  margin-top: 0.25rem;
+}
+
+.flow-message.response.error .message-code {
+  color: #fbbf24;
+}
+
+.flow-message.response.success .message-code {
+  color: #22c55e;
+}
+
+.payment-flow-status {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-text {
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  color: #00ff41;
+  animation: statusBlink 1s ease infinite;
+}
+
+.status-text.warning {
+  color: #fbbf24;
+}
+
+.status-text.success {
+  color: #22c55e;
+  animation: none;
+}
+
+@keyframes statusBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Responsive for payment flow */
+@media (max-width: 600px) {
+  .payment-flow-modal {
+    padding: 1.5rem 1rem;
+  }
+
+  .payment-flow-diagram {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .flow-actor {
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .actor-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+
+  .flow-connection {
+    padding: 1rem 0;
+    width: 100%;
+  }
+
+  .flow-message {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+
+  .flow-message .message-content {
+    text-align: center !important;
+    align-items: center;
+  }
+
+  .message-arrow {
+    transform: rotate(90deg);
+  }
+
+  .flow-message.response .message-status {
+    margin-left: 0;
+  }
+}

@@ -72,6 +72,11 @@ export default function SimulationPage() {
     const [actionLoading, setActionLoading] = useState(false);
     const [healthAnalysis, setHealthAnalysis] = useState<{ interpretation: string; guidance: string[] } | null>(null);
 
+    // Payment Flow Modal State
+    const [showPaymentFlow, setShowPaymentFlow] = useState(false);
+    const [paymentFlowStep, setPaymentFlowStep] = useState(0);
+    const [paymentFlowEndpoint, setPaymentFlowEndpoint] = useState("");
+
     const deductBalance = (amount: number) => {
         setBalance((prev) => Math.max(0, prev - amount));
     };
@@ -110,12 +115,28 @@ export default function SimulationPage() {
         setActionLoading(false);
     };
 
+    // Consultation fee
+    const CONSULTATION_FEE = "0.002";
+
     // Step 1: Start consultation
     const startConsultation = async () => {
         setActionLoading(true);
         addMessage("patient", "Hello doctor, I've been feeling very tired lately, having headaches, and trouble sleeping.");
 
         await simulateTyping("doctor", "I understand. Let me analyze your symptoms...", 1500);
+
+        // Start payment flow visualization for consultation
+        setPaymentFlowEndpoint("/api/assistant/consult");
+        setShowPaymentFlow(true);
+        setPaymentFlowStep(1);
+        await new Promise(r => setTimeout(r, 600));
+        setPaymentFlowStep(2);
+        await new Promise(r => setTimeout(r, 800));
+        setPaymentFlowStep(3);
+        await new Promise(r => setTimeout(r, 600));
+
+        // Deduct consultation fee
+        deductBalance(parseFloat(CONSULTATION_FEE));
 
         try {
             const res = await fetch("/api/assistant/consult", {
@@ -124,6 +145,11 @@ export default function SimulationPage() {
                 body: JSON.stringify({ symptoms: "fatigue, headache, trouble sleeping" }),
             });
             const data = await res.json();
+
+            setPaymentFlowStep(4);
+            await new Promise(r => setTimeout(r, 500));
+            setShowPaymentFlow(false);
+            setPaymentFlowStep(0);
 
             if (data.success) {
                 await simulateTyping(
@@ -135,6 +161,7 @@ export default function SimulationPage() {
             }
         } catch (error) {
             console.error(error);
+            setShowPaymentFlow(false);
         }
         setActionLoading(false);
     };
@@ -175,8 +202,19 @@ export default function SimulationPage() {
         setActionLoading(true);
 
         const price = parseFloat(selectedLab.price);
-        deductBalance(price);
         addMessage("patient", `Here's my payment of ${selectedLab.price} USDC.`);
+
+        // Start payment flow visualization
+        setPaymentFlowEndpoint("/api/labs/order");
+        setShowPaymentFlow(true);
+        setPaymentFlowStep(1);
+        await new Promise(r => setTimeout(r, 600));
+        setPaymentFlowStep(2);
+        await new Promise(r => setTimeout(r, 800));
+        setPaymentFlowStep(3);
+        await new Promise(r => setTimeout(r, 600));
+
+        deductBalance(price);
 
         try {
             const res = await fetch("/api/labs/order", {
@@ -190,6 +228,11 @@ export default function SimulationPage() {
             });
             const data = await res.json();
 
+            setPaymentFlowStep(4);
+            await new Promise(r => setTimeout(r, 500));
+            setShowPaymentFlow(false);
+            setPaymentFlowStep(0);
+
             if (data.success) {
                 setTestResults(data.results);
                 await simulateTyping("labtech", "Payment received! Here are your test results:", 2000);
@@ -197,6 +240,7 @@ export default function SimulationPage() {
             }
         } catch (error) {
             console.error(error);
+            setShowPaymentFlow(false);
         }
         setActionLoading(false);
     };
@@ -525,6 +569,79 @@ export default function SimulationPage() {
                             className={`progress-dot ${s === step ? "active" : ""} ${s < step ? "completed" : ""}`}
                         />
                     ))}
+                </div>
+            )}
+
+            {/* Payment Flow Visualization Modal */}
+            {showPaymentFlow && (
+                <div className="payment-flow-overlay">
+                    <div className="payment-flow-modal">
+                        <h3 className="payment-flow-title">🔐 x402 Payment Protocol</h3>
+                        <p className="payment-flow-endpoint">Endpoint: <code>{paymentFlowEndpoint}</code></p>
+                        
+                        <div className="payment-flow-diagram">
+                            {/* Client */}
+                            <div className="flow-actor client">
+                                <div className="actor-icon">🍌</div>
+                                <span className="actor-label">Client</span>
+                            </div>
+
+                            {/* Connection Lines & Messages */}
+                            <div className="flow-connection">
+                                {/* Step 1: Initial Request */}
+                                <div className={`flow-message request ${paymentFlowStep >= 1 ? "active" : ""}`}>
+                                    <div className="message-arrow right">→</div>
+                                    <div className="message-content">
+                                        <span className="message-method">POST</span>
+                                        <span className="message-text">Request (no payment)</span>
+                                    </div>
+                                </div>
+
+                                {/* Step 2: 402 Response */}
+                                <div className={`flow-message response error ${paymentFlowStep >= 2 ? "active" : ""}`}>
+                                    <div className="message-arrow left">←</div>
+                                    <div className="message-content">
+                                        <span className="message-status">402</span>
+                                        <span className="message-text">Payment Required</span>
+                                        <code className="message-code">{`{ price: "${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (selectedLab?.price || "0.015")} USDC" }`}</code>
+                                    </div>
+                                </div>
+
+                                {/* Step 3: Payment Request */}
+                                <div className={`flow-message request ${paymentFlowStep >= 3 ? "active" : ""}`}>
+                                    <div className="message-arrow right">→</div>
+                                    <div className="message-content">
+                                        <span className="message-method">POST</span>
+                                        <span className="message-text">+ X-PAYMENT: simulated</span>
+                                        <code className="message-code">💳 Payment attached</code>
+                                    </div>
+                                </div>
+
+                                {/* Step 4: Success Response */}
+                                <div className={`flow-message response success ${paymentFlowStep >= 4 ? "active" : ""}`}>
+                                    <div className="message-arrow left">←</div>
+                                    <div className="message-content">
+                                        <span className="message-status success">200</span>
+                                        <span className="message-text">Success!</span>
+                                        <code className="message-code">{`{ results: [...] }`}</code>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Server */}
+                            <div className="flow-actor server">
+                                <div className="actor-icon">🍌</div>
+                                <span className="actor-label">Server</span>
+                            </div>
+                        </div>
+
+                        <div className="payment-flow-status">
+                            {paymentFlowStep === 1 && <span className="status-text">📤 Sending request...</span>}
+                            {paymentFlowStep === 2 && <span className="status-text warning">⚠️ Payment required! HTTP 402</span>}
+                            {paymentFlowStep === 3 && <span className="status-text">💳 Attaching payment proof...</span>}
+                            {paymentFlowStep === 4 && <span className="status-text success">✅ Payment verified! Receiving data...</span>}
+                        </div>
+                    </div>
                 </div>
             )}
         </main>
