@@ -636,7 +636,7 @@ export default function SimulationPage() {
                     <div className="payment-flow-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="payment-flow-header">
                             <h3 className="payment-flow-title">
-                                {isReversePayment ? "💰 x402 Reverse Payment" : "🔐 x402 Payment Protocol"}
+                                {isReversePayment ? "🔐 x402 Protocol (Client → 402)" : "🔐 x402 Payment Protocol"}
                             </h3>
                             {paymentFlowStep === 4 && (
                                 <button className="payment-flow-close" onClick={closePaymentFlow}>✕</button>
@@ -692,35 +692,39 @@ export default function SimulationPage() {
                                     </>
                                 ) : (
                                     <>
-                                        {/* Reverse Flow: Server pays Client */}
-                                        <div className={`flow-message request ${paymentFlowStep >= 1 ? "active" : ""}`}>
-                                            <div className="message-arrow right">→</div>
-                                            <div className="message-content">
-                                                <span className="message-method">POST</span>
-                                                <span className="message-text">Accept data offer</span>
-                                            </div>
-                                        </div>
-
-                                        <div className={`flow-message response success ${paymentFlowStep >= 2 ? "active" : ""}`}>
+                                        {/* Reverse Flow: Client returns 402, Server pays */}
+                                        {/* Step 1: Server requests data */}
+                                        <div className={`flow-message response ${paymentFlowStep >= 1 ? "active" : ""}`}>
                                             <div className="message-arrow left">←</div>
                                             <div className="message-content">
-                                                <span className="message-status success">200</span>
-                                                <span className="message-text">Offer accepted</span>
+                                                <span className="message-method">GET</span>
+                                                <span className="message-text">Request user data</span>
                                             </div>
                                         </div>
 
+                                        {/* Step 2: CLIENT returns 402 to SERVER */}
+                                        <div className={`flow-message request error ${paymentFlowStep >= 2 ? "active" : ""}`}>
+                                            <div className="message-arrow right">→</div>
+                                            <div className="message-content">
+                                                <span className="message-status">402</span>
+                                                <span className="message-text">Payment Required</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Step 3: Server sends payment */}
                                         <div className={`flow-message response payment ${paymentFlowStep >= 3 ? "active" : ""}`}>
                                             <div className="message-arrow left">←</div>
                                             <div className="message-content">
-                                                <span className="message-method reverse">PAYMENT</span>
-                                                <span className="message-text">💸 +{dataOfferPrice} USDC sent to you!</span>
+                                                <span className="message-method reverse">X-PAYMENT</span>
+                                                <span className="message-text">💸 +{dataOfferPrice} USDC</span>
                                             </div>
                                         </div>
 
-                                        <div className={`flow-message request ${paymentFlowStep >= 4 ? "active" : ""}`}>
+                                        {/* Step 4: Client grants access */}
+                                        <div className={`flow-message request success ${paymentFlowStep >= 4 ? "active" : ""}`}>
                                             <div className="message-arrow right">→</div>
                                             <div className="message-content">
-                                                <span className="message-status success">✓</span>
+                                                <span className="message-status success">200</span>
                                                 <span className="message-text">Data access granted</span>
                                             </div>
                                         </div>
@@ -757,26 +761,22 @@ export default function SimulationPage() {
                             </div>
                         )}
 
-                        {/* Reverse Payment Response */}
+                        {/* Client returns 402 to Server (Reverse Flow) */}
                         {paymentFlowStep >= 2 && isReversePayment && (
-                            <div className="http-response-block reverse">
+                            <div className="http-response-block">
                                 <div className="response-header">
-                                    <span className="response-status-badge success">Reverse Payment Response</span>
+                                    <span className="response-status-badge error">HTTP 402 (Client → Server)</span>
                                 </div>
                                 <pre className="response-code">{`{
-  "success": true,
-  "payment": {
-    "direction": "service_to_user",
-    "amount": "${dataOfferPrice}",
+  "status": 402,
+  "payment_info": {
+    "price": "${dataOfferPrice}",
     "currency": "USDC",
-    "transaction_id": "tx_${Date.now()}_reverse"
+    "payment_required": true,
+    "description": "Data Access Fee - Anonymized Health Records",
+    "recipient": "patient-wallet"
   },
-  "data_consent": {
-    "scope": "anonymized_test_results",
-    "usage": "aggregate_health_analysis",
-    "revocable": true
-  },
-  "message": "You received +${dataOfferPrice} USDC for your data!"
+  "message": "Payment of ${dataOfferPrice} USDC required to access user data."
 }`}</pre>
                             </div>
                         )}
@@ -791,10 +791,10 @@ export default function SimulationPage() {
                                 </>
                             ) : (
                                 <>
-                                    {paymentFlowStep === 1 && <span className="status-text">📤 Accepting data offer...</span>}
-                                    {paymentFlowStep === 2 && <span className="status-text success">✅ Offer accepted by server</span>}
-                                    {paymentFlowStep === 3 && <span className="status-text money">💰 Receiving payment from server...</span>}
-                                    {paymentFlowStep === 4 && <span className="status-text success">🎉 +{dataOfferPrice} USDC received! Data shared.</span>}
+                                    {paymentFlowStep === 1 && <span className="status-text">📥 Server requesting your data...</span>}
+                                    {paymentFlowStep === 2 && <span className="status-text warning">⚠️ You return 402: Pay me first!</span>}
+                                    {paymentFlowStep === 3 && <span className="status-text money">💰 Server sending payment...</span>}
+                                    {paymentFlowStep === 4 && <span className="status-text success">✅ Payment received! Granting data access.</span>}
                                 </>
                             )}
                         </div>
