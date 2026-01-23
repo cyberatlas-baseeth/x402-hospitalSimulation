@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { useSendTransaction } from 'wagmi';
+import { useSendTransaction, useSwitchChain, useAccount } from 'wagmi';
 import { parseEther } from 'viem';
+import { baseSepolia } from 'wagmi/chains';
 
 interface X402PaymentInfo {
   price: string;
@@ -30,6 +31,8 @@ export function useX402() {
     paymentInfo: X402PaymentInfo;
   } | null>(null);
 
+  const { chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
   const { sendTransactionAsync } = useSendTransaction();
 
   /**
@@ -95,18 +98,41 @@ export function useX402() {
     setIsProcessing(true);
 
     try {
+      // Check if we're on the correct chain (Base Sepolia)
+      if (chain?.id !== baseSepolia.id) {
+        console.log('[x402] Wrong chain detected, switching to Base Sepolia...');
+        console.log('[x402] Current chain:', chain?.id, chain?.name);
+        console.log('[x402] Target chain:', baseSepolia.id, baseSepolia.name);
+        
+        try {
+          await switchChainAsync({ chainId: baseSepolia.id });
+          console.log('[x402] Successfully switched to Base Sepolia');
+          // Wait a moment for the chain switch to propagate
+          await new Promise(r => setTimeout(r, 1000));
+        } catch (switchError) {
+          console.error('[x402] Failed to switch chain:', switchError);
+          setIsProcessing(false);
+          return { 
+            success: false, 
+            data: { error: 'Please switch to Base Sepolia network in MetaMask' } 
+          };
+        }
+      }
+
       const value = parseEther(pending.paymentInfo.price);
       const recipient = pending.paymentInfo.recipient as `0x${string}`;
       
-      console.log('[x402] Sending payment:', {
+      console.log('[x402] Sending payment on Base Sepolia:', {
         to: recipient,
         value: pending.paymentInfo.price + ' ETH',
         valueWei: value.toString(),
+        chainId: baseSepolia.id,
       });
 
       const hash = await sendTransactionAsync({
         to: recipient,
         value,
+        chainId: baseSepolia.id, // Force Base Sepolia
       });
 
       console.log('[x402] Transaction sent:', hash);
