@@ -1,11 +1,12 @@
 'use client';
 
-import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useBalance, useChainId } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
 import { formatEther } from 'viem';
 
 export function ConnectWallet() {
   const { address, isConnected, chain } = useAccount();
+  const chainId = useChainId(); // Alternative way to get chain ID
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   
@@ -18,23 +19,25 @@ export function ConnectWallet() {
   // Format balance from bigint to string
   const formattedBalance = ethBalance ? formatEther(ethBalance.value) : '0';
 
+  // Use chainId from useChainId hook as fallback
+  const currentChainId = chain?.id || chainId;
+  const isWrongNetwork = currentChainId !== baseSepolia.id;
+
   if (isConnected && address) {
-    const isWrongNetwork = chain?.id !== baseSepolia.id;
-    
     // Debug chain detection
     console.log('[Wallet] Chain detection:', {
-      currentChainId: chain?.id,
-      currentChainName: chain?.name,
+      chainFromAccount: chain?.id,
+      chainFromHook: chainId,
+      currentChainId,
       expectedChainId: baseSepolia.id,
-      expectedChainName: baseSepolia.name,
       isWrongNetwork,
     });
     
     return (
       <div className="wallet-connected">
         <div className="wallet-info">
-          <span className="wallet-network" title={`Chain ID: ${chain?.id || 'unknown'}`}>
-            {isWrongNetwork ? `⚠️ Wrong Network (${chain?.id})` : '🟢 Base Sepolia'}
+          <span className="wallet-network" title={`Chain ID: ${currentChainId || 'unknown'}`}>
+            {isWrongNetwork ? `⚠️ Wrong Network (${currentChainId})` : '🟢 Base Sepolia'}
           </span>
           <span className="wallet-address">
             {address.slice(0, 6)}...{address.slice(-4)}
@@ -70,6 +73,7 @@ export function ConnectWallet() {
 
 export function useWalletStatus() {
   const { address, isConnected, chain } = useAccount();
+  const chainId = useChainId(); // Alternative way to get chain ID
   const { data: ethBalance } = useBalance({
     address: address,
     chainId: baseSepolia.id,
@@ -78,10 +82,13 @@ export function useWalletStatus() {
   // Format balance from bigint to number
   const balanceInEth = ethBalance ? parseFloat(formatEther(ethBalance.value)) : 0;
 
+  // Use chainId from useChainId hook as fallback
+  const currentChainId = chain?.id || chainId;
+
   return {
     address,
     isConnected,
-    isCorrectNetwork: chain?.id === baseSepolia.id,
+    isCorrectNetwork: currentChainId === baseSepolia.id,
     ethBalance: balanceInEth,
   };
 }

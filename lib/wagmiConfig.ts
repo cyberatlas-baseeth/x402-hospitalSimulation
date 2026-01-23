@@ -5,9 +5,13 @@ import { injected } from 'wagmi/connectors';
 export const config = createConfig({
   chains: [baseSepolia],
   connectors: [
-    injected(), // MetaMask, etc.
+    injected({
+      shimDisconnect: true,
+    }),
   ],
   transports: {
-    [baseSepolia.id]: http(),
+    [baseSepolia.id]: http('https://sepolia.base.org'),
   },
+  // Sync with wallet
+  syncConnectedChain: true,
 });
