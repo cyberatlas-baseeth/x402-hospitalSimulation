@@ -2,17 +2,15 @@
 
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
-import { USDC_ADDRESS } from '@/lib/wagmiConfig';
 
 export function ConnectWallet() {
   const { address, isConnected, chain } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   
-  // Get USDC balance
-  const { data: usdcBalance } = useBalance({
+  // Get native ETH balance on Base Sepolia
+  const { data: ethBalance } = useBalance({
     address: address,
-    token: USDC_ADDRESS,
     chainId: baseSepolia.id,
   });
 
@@ -28,9 +26,9 @@ export function ConnectWallet() {
           <span className="wallet-address">
             {address.slice(0, 6)}...{address.slice(-4)}
           </span>
-          {usdcBalance && (
+          {ethBalance && (
             <span className="wallet-balance">
-              {parseFloat(usdcBalance.formatted).toFixed(4)} USDC
+              {parseFloat(ethBalance.formatted).toFixed(6)} ETH
             </span>
           )}
         </div>
@@ -59,9 +57,8 @@ export function ConnectWallet() {
 
 export function useWalletStatus() {
   const { address, isConnected, chain } = useAccount();
-  const { data: usdcBalance } = useBalance({
+  const { data: ethBalance } = useBalance({
     address: address,
-    token: USDC_ADDRESS,
     chainId: baseSepolia.id,
   });
 
@@ -69,7 +66,7 @@ export function useWalletStatus() {
     address,
     isConnected,
     isCorrectNetwork: chain?.id === baseSepolia.id,
-    usdcBalance: usdcBalance ? parseFloat(usdcBalance.formatted) : 0,
+    ethBalance: ethBalance ? parseFloat(ethBalance.formatted) : 0,
   };
 }
 

@@ -24,10 +24,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Calculate offer based on data value
-        const basePrice = 0.005;
-        const perTestBonus = 0.002;
-        const totalOffer = (basePrice + test_results.length * perTestBonus).toFixed(4);
+        // Calculate offer based on data value (in ETH)
+        const basePrice = 0.0005;
+        const perTestBonus = 0.0002;
+        const totalOffer = (basePrice + test_results.length * perTestBonus).toFixed(6);
 
         const offer = createReversePaymentOffer(
             totalOffer,

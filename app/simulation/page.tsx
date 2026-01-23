@@ -41,9 +41,9 @@ interface AIExpert {
 type SimStep = 0 | 1 | 2 | 3 | 4 | 5;
 
 const AI_EXPERTS: AIExpert[] = [
-    { id: "grok", name: "Grok", avatar: "/avatars/grok.png", color: "#1DA1F2", price: "0.005" },
-    { id: "chatgpt", name: "ChatGPT", avatar: "/avatars/chatgpt.png", color: "#10a37f", price: "0.008" },
-    { id: "claude", name: "Claude", avatar: "/avatars/claude.png", color: "#D97757", price: "0.006" },
+    { id: "grok", name: "Grok", avatar: "/avatars/grok.png", color: "#1DA1F2", price: "0.0005" },
+    { id: "chatgpt", name: "ChatGPT", avatar: "/avatars/chatgpt.png", color: "#10a37f", price: "0.0008" },
+    { id: "claude", name: "Claude", avatar: "/avatars/claude.png", color: "#D97757", price: "0.0006" },
 ];
 
 const AVATARS: Record<string, string> = {
@@ -63,11 +63,11 @@ const NAMES: Record<string, string> = {
 export default function SimulationPage() {
     const [step, setStep] = useState<SimStep>(0);
     const [selectedExpert, setSelectedExpert] = useState<AIExpert | null>(null);
-    const [balance, setBalance] = useState(1.0); // Starting balance: 1 USDC (simulated)
+    const [balance, setBalance] = useState(0.1); // Starting balance: 0.1 ETH (simulated)
     const [paymentMode, setPaymentMode] = useState<"simulated" | "real">("simulated");
     
     // Wallet status for real payments
-    const { isConnected, isCorrectNetwork, usdcBalance, address } = useWalletStatus();
+    const { isConnected, isCorrectNetwork, ethBalance, address } = useWalletStatus();
     const { sendPayment, isPending: isPaymentPending, isConfirming, txHash } = usePayment();
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
@@ -124,7 +124,7 @@ export default function SimulationPage() {
     };
 
     const addBalance = (amount: number) => {
-        // In real mode, this would require a smart contract to send USDC to user
+        // In real mode, this would require a smart contract to send ETH to user
         // For now, only simulated mode adds balance
         if (paymentMode === "simulated") {
             setBalance((prev) => prev + amount);
@@ -185,7 +185,7 @@ export default function SimulationPage() {
     };
 
     // Consultation fee
-    const CONSULTATION_FEE = "0.002";
+    const CONSULTATION_FEE = "0.0002";
 
     // Step 1: Start consultation
     const startConsultation = async () => {
@@ -269,7 +269,7 @@ export default function SimulationPage() {
         setActionLoading(true);
 
         const price = parseFloat(selectedLab.price);
-        addMessage("patient", `Here's my payment of ${selectedLab.price} USDC.`);
+        addMessage("patient", `Here's my payment of ${selectedLab.price} ETH.`);
 
         // Start payment flow visualization
         setPaymentFlowEndpoint("/api/labs/order");
@@ -327,7 +327,7 @@ export default function SimulationPage() {
                 setDataOfferPrice(data.offer_price);
                 await simulateTyping(
                     "databot",
-                    `Hello! I'm a research data evaluator. I'd like to purchase your anonymized health data for ${data.offer_price} USDC. In return, I'll also provide you with a detailed health analysis.`,
+                    `Hello! I'm a research data evaluator. I'd like to purchase your anonymized health data for ${data.offer_price} ETH. In return, I'll also provide you with a detailed health analysis.`,
                     2000
                 );
             }
@@ -373,7 +373,7 @@ export default function SimulationPage() {
                 setAccessToken(data.access_token);
                 const price = parseFloat(dataOfferPrice);
                 addBalance(price);
-                await simulateTyping("databot", `Thank you! I've sent ${dataOfferPrice} USDC to your wallet. Let me analyze your data...`, 1500);
+                await simulateTyping("databot", `Thank you! I've sent ${dataOfferPrice} ETH to your wallet. Let me analyze your data...`, 1500);
                 setStep(5);
             }
         } catch (error) {
@@ -435,7 +435,7 @@ export default function SimulationPage() {
     const restart = () => {
         setStep(0);
         setSelectedExpert(null);
-        setBalance(1.0);
+        setBalance(0.1);
         setMessages([]);
         setLabOffers([]);
         setSelectedLab(null);
@@ -448,7 +448,7 @@ export default function SimulationPage() {
     };
 
     // Get display balance based on mode
-    const displayBalance = paymentMode === "real" && isConnected ? usdcBalance : balance;
+    const displayBalance = paymentMode === "real" && isConnected ? ethBalance : balance;
 
     return (
         <main className="simulation-container">
@@ -464,7 +464,7 @@ export default function SimulationPage() {
                 <span className="balance-label">
                     {paymentMode === "real" ? "🔗 On-Chain:" : "💰 Simulated:"}
                 </span>
-                <span className="balance-value">{displayBalance.toFixed(4)} USDC</span>
+                <span className="balance-value">{displayBalance.toFixed(6)} ETH</span>
                 {paymentMode === "real" && !isConnected && (
                     <span style={{ fontSize: "0.7rem", color: "#fbbf24", display: "block" }}>
                         Connect wallet for real payments
@@ -492,7 +492,7 @@ export default function SimulationPage() {
                         className={`mode-btn ${paymentMode === "real" ? "active real" : ""}`}
                         onClick={() => setPaymentMode("real")}
                         disabled={!isConnected}
-                        title={!isConnected ? "Connect wallet first" : "Use Base Sepolia USDC"}
+                        title={!isConnected ? "Connect wallet first" : "Use Base Sepolia ETH"}
                     >
                         ⛓️ Base Sepolia
                     </button>
@@ -529,7 +529,7 @@ export default function SimulationPage() {
                                     />
                                 </div>
                                 <h3>{expert.name}</h3>
-                                <div className="expert-price">{expert.price} USDC</div>
+                                <div className="expert-price">{expert.price} ETH</div>
                             </div>
                         ))}
                     </div>
@@ -577,7 +577,7 @@ export default function SimulationPage() {
                             onClick={() => setSelectedLab(offer)}
                         >
                             <span className="lab-name">{offer.lab_name}</span>
-                            <span className="lab-price">{offer.price} USDC</span>
+                            <span className="lab-price">{offer.price} ETH</span>
                         </div>
                     ))}
                 </div>
@@ -641,7 +641,7 @@ export default function SimulationPage() {
                         <>
                             <div className="payment-banner" style={{ marginBottom: "1rem" }}>
                                 <h3>🔒 Payment Required</h3>
-                                <div className="price">{selectedLab?.price} <span className="currency">USDC</span></div>
+                                <div className="price">{selectedLab?.price} <span className="currency">ETH</span></div>
                             </div>
                             <button className="btn btn-warning" onClick={orderTests} disabled={actionLoading}>
                                 {actionLoading ? "Processing..." : "💳 Pay & Get Results"}
@@ -657,7 +657,7 @@ export default function SimulationPage() {
 
                     {step === 4 && dataOfferPrice && (
                         <button className="btn btn-success" onClick={acceptDataOffer} disabled={actionLoading}>
-                            {actionLoading ? "Processing..." : `✓ Accept & Get Paid (+${dataOfferPrice} USDC)`}
+                            {actionLoading ? "Processing..." : `✓ Accept & Get Paid (+${dataOfferPrice} ETH)`}
                         </button>
                     )}
 
@@ -671,7 +671,7 @@ export default function SimulationPage() {
                         <>
                             <h3 style={{ color: "var(--success)" }}>🎉 Simulation Complete!</h3>
                             <p style={{ color: "var(--text-muted)", margin: "1rem 0" }}>
-                                Final Balance: <strong>{balance.toFixed(3)} USDC</strong>
+                                Final Balance: <strong>{balance.toFixed(3)} ETH</strong>
                             </p>
                             <button className="btn btn-secondary" onClick={restart}>
                                 🔄 Restart Simulation
@@ -787,7 +787,7 @@ export default function SimulationPage() {
                                             <div className="message-arrow left">←</div>
                                             <div className="message-content">
                                                 <span className="message-method reverse">X-PAYMENT</span>
-                                                <span className="message-text">💸 +{dataOfferPrice} USDC</span>
+                                                <span className="message-text">💸 +{dataOfferPrice} ETH</span>
                                             </div>
                                         </div>
 
@@ -822,12 +822,12 @@ export default function SimulationPage() {
   "status": 402,
   "payment_info": {
     "price": "${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (paymentFlowEndpoint.includes("expert") ? selectedExpert?.price : (selectedLab?.price || "0.015"))}",
-    "currency": "USDC",
+    "currency": "ETH",
     "payment_required": true,
     "description": "${paymentFlowEndpoint.includes("consult") ? "AI Health Assistant Consultation Fee" : (paymentFlowEndpoint.includes("expert") ? `AI Expert Selection - ${selectedExpert?.name}` : "Lab Test Order")}",
     "recipient": "${paymentFlowEndpoint.includes("consult") ? "ai-health-assistant" : (paymentFlowEndpoint.includes("expert") ? `expert-${selectedExpert?.id}` : "lab-" + (selectedLab?.lab_id || "001"))}"
   },
-  "message": "Payment of ${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (paymentFlowEndpoint.includes("expert") ? selectedExpert?.price : (selectedLab?.price || "0.015"))} USDC required to access this resource."
+  "message": "Payment of ${paymentFlowEndpoint.includes("consult") ? CONSULTATION_FEE : (paymentFlowEndpoint.includes("expert") ? selectedExpert?.price : (selectedLab?.price || "0.015"))} ETH required to access this resource."
 }`}</pre>
                             </div>
                         )}
@@ -842,12 +842,12 @@ export default function SimulationPage() {
   "status": 402,
   "payment_info": {
     "price": "${dataOfferPrice}",
-    "currency": "USDC",
+    "currency": "ETH",
     "payment_required": true,
     "description": "Data Access Fee - Anonymized Health Records",
     "recipient": "patient-wallet"
   },
-  "message": "Payment of ${dataOfferPrice} USDC required to access user data."
+  "message": "Payment of ${dataOfferPrice} ETH required to access user data."
 }`}</pre>
                             </div>
                         )}
