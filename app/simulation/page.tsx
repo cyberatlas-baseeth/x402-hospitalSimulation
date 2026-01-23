@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ConnectWallet, useWalletStatus } from "@/components/ConnectWallet";
+import { usePayment } from "@/hooks/usePayment";
 
 // Types
 interface LabOffer {
@@ -61,7 +63,12 @@ const NAMES: Record<string, string> = {
 export default function SimulationPage() {
     const [step, setStep] = useState<SimStep>(0);
     const [selectedExpert, setSelectedExpert] = useState<AIExpert | null>(null);
-    const [balance, setBalance] = useState(1.0); // Starting balance: 1 USDC
+    const [balance, setBalance] = useState(1.0); // Starting balance: 1 USDC (simulated)
+    const [paymentMode, setPaymentMode] = useState<"simulated" | "real">("simulated");
+    
+    // Wallet status for real payments
+    const { isConnected, isCorrectNetwork, usdcBalance, address } = useWalletStatus();
+    const { sendPayment, isPending: isPaymentPending, isConfirming, txHash } = usePayment();
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [labOffers, setLabOffers] = useState<LabOffer[]>([]);
@@ -99,12 +106,30 @@ export default function SimulationPage() {
         }
     };
 
-    const deductBalance = (amount: number) => {
-        setBalance((prev) => Math.max(0, prev - amount));
+    const deductBalance = async (amount: number) => {
+        if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+            // Real payment via MetaMask
+            try {
+                await sendPayment(amount.toString());
+                // Balance will update automatically from wallet
+            } catch (error) {
+                console.error("Real payment failed:", error);
+                // Fallback to simulated
+                setBalance((prev) => Math.max(0, prev - amount));
+            }
+        } else {
+            // Simulated payment
+            setBalance((prev) => Math.max(0, prev - amount));
+        }
     };
 
     const addBalance = (amount: number) => {
-        setBalance((prev) => prev + amount);
+        // In real mode, this would require a smart contract to send USDC to user
+        // For now, only simulated mode adds balance
+        if (paymentMode === "simulated") {
+            setBalance((prev) => prev + amount);
+        }
+        // In real mode, the data offer payment would be handled differently
     };
 
     const addMessage = (sender: Message["sender"], text: string) => {
@@ -142,7 +167,7 @@ export default function SimulationPage() {
         // Small delay to ensure modal is fully closed
         await new Promise(r => setTimeout(r, 100));
 
-        deductBalance(price);
+        await deductBalance(price);
 
         NAMES.doctor = expert.name;
         AVATARS.doctor = expert.avatar;
@@ -184,12 +209,12 @@ export default function SimulationPage() {
         await waitForPaymentFlowClose();
 
         // Deduct consultation fee after user confirms
-        deductBalance(parseFloat(CONSULTATION_FEE));
+        await deductBalance(parseFloat(CONSULTATION_FEE));
 
         try {
             const res = await fetch("/api/assistant/consult", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "X-PAYMENT": "simulated" },
+                headers: { "Content-Type": "application/json", "X-PAYMENT": paymentMode === "real" ? `tx:${txHash || "pending"}` : "simulated" },
                 body: JSON.stringify({ symptoms: "fatigue, headache, trouble sleeping" }),
             });
             const data = await res.json();
@@ -261,12 +286,12 @@ export default function SimulationPage() {
         await waitForPaymentFlowClose();
 
         // Deduct balance after user confirms
-        deductBalance(price);
+        await deductBalance(price);
 
         try {
             const res = await fetch("/api/labs/order", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "X-PAYMENT": "simulated" },
+                headers: { "Content-Type": "application/json", "X-PAYMENT": paymentMode === "real" ? `tx:${txHash || "pending"}` : "simulated" },
                 body: JSON.stringify({
                     lab_id: selectedLab.lab_id,
                     tests: selectedLab.tests,
@@ -422,14 +447,29 @@ export default function SimulationPage() {
         AVATARS.doctor = "/avatars/doctor.png";
     };
 
+    // Get display balance based on mode
+    const displayBalance = paymentMode === "real" && isConnected ? usdcBalance : balance;
+
     return (
         <main className="simulation-container">
             <Link href="/" className="back-link">← Back to Home</Link>
 
+            {/* Wallet Connection */}
+            <div className="wallet-section">
+                <ConnectWallet />
+            </div>
+
             {/* Balance Display */}
             <div className="balance-display">
-                <span className="balance-label">💰 Balance:</span>
-                <span className="balance-value">{balance.toFixed(3)} USDC</span>
+                <span className="balance-label">
+                    {paymentMode === "real" ? "🔗 On-Chain:" : "💰 Simulated:"}
+                </span>
+                <span className="balance-value">{displayBalance.toFixed(4)} USDC</span>
+                {paymentMode === "real" && !isConnected && (
+                    <span style={{ fontSize: "0.7rem", color: "#fbbf24", display: "block" }}>
+                        Connect wallet for real payments
+                    </span>
+                )}
             </div>
 
             <div className="simulation-header matrix-style">
@@ -439,6 +479,29 @@ export default function SimulationPage() {
                     <span className="matrix-bracket">]</span>
                 </div>
                 <p className="matrix-subtitle">Healthcare Payment Simulation</p>
+                
+                {/* Mode Toggle */}
+                <div className="mode-toggle">
+                    <button 
+                        className={`mode-btn ${paymentMode === "simulated" ? "active" : ""}`}
+                        onClick={() => setPaymentMode("simulated")}
+                    >
+                        🎮 Simulated
+                    </button>
+                    <button 
+                        className={`mode-btn ${paymentMode === "real" ? "active real" : ""}`}
+                        onClick={() => setPaymentMode("real")}
+                        disabled={!isConnected}
+                        title={!isConnected ? "Connect wallet first" : "Use Base Sepolia USDC"}
+                    >
+                        ⛓️ Base Sepolia
+                    </button>
+                </div>
+                {paymentMode === "real" && isConnected && !isCorrectNetwork && (
+                    <p style={{ color: "#fbbf24", fontSize: "0.8rem", marginTop: "0.5rem" }}>
+                        ⚠️ Please switch to Base Sepolia network
+                    </p>
+                )}
             </div>
 
             {/* Step 0: AI Expert Selection */}
@@ -642,7 +705,15 @@ export default function SimulationPage() {
                                 <button className="payment-flow-close" onClick={closePaymentFlow}>✕</button>
                             )}
                         </div>
-                        <p className="payment-flow-endpoint">Endpoint: <code>{paymentFlowEndpoint}</code></p>
+                        <p className="payment-flow-endpoint">
+                            Endpoint: <code>{paymentFlowEndpoint}</code>
+                            {paymentMode === "real" && isConnected && (
+                                <span className="payment-mode-badge real">⛓️ Base Sepolia</span>
+                            )}
+                            {paymentMode === "simulated" && (
+                                <span className="payment-mode-badge simulated">🎮 Simulated</span>
+                            )}
+                        </p>
                         
                         <div className="payment-flow-diagram">
                             {/* Client */}
@@ -678,7 +749,7 @@ export default function SimulationPage() {
                                             <div className="message-arrow right">→</div>
                                             <div className="message-content">
                                                 <span className="message-method">POST</span>
-                                                <span className="message-text">+ X-PAYMENT: simulated</span>
+                                                <span className="message-text">+ X-PAYMENT: {paymentMode === "real" && isConnected ? "tx:0x..." : "simulated"}</span>
                                             </div>
                                         </div>
 
