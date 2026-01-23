@@ -1191,6 +1191,124 @@ body {
   animation: matrixGlow 1s ease-in-out infinite alternate;
 }
 
+/* Large Matrix Logo */
+.matrix-logo-lg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.matrix-bracket-lg {
+  font-family: 'Courier New', monospace;
+  font-size: 4rem;
+  color: #00ff41;
+  opacity: 0.6;
+}
+
+.matrix-text-lg {
+  font-family: 'Courier New', monospace;
+  font-size: 4rem;
+  font-weight: 700;
+  color: #00ff41;
+  text-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+  animation: matrixGlow 2s ease-in-out infinite alternate;
+}
+
+/* Hero Section */
+.hero-section {
+  text-align: center;
+  padding: 2rem;
+  background: var(--surface);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.hero-content {
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+.hero-content h2 {
+  font-size: 1.5rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.7;
+}
+
+.hero-features {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.hero-features li {
+  background: var(--glass);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+}
+
+/* Start Button */
+.start-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 3rem;
+  background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+  border: 2px solid rgba(0, 255, 65, 0.4);
+  border-radius: 16px;
+  color: #00ff41;
+  text-decoration: none;
+  font-family: 'Courier New', monospace;
+  font-size: 1.25rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+}
+
+.start-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 50px rgba(0, 255, 65, 0.3);
+  border-color: rgba(0, 255, 65, 0.8);
+}
+
+.start-icon {
+  font-size: 1.5rem;
+}
+
+.start-text {
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+@media (max-width: 768px) {
+  .matrix-bracket-lg,
+  .matrix-text-lg {
+    font-size: 2.5rem;
+  }
+
+  .hero-features {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .start-button {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+}
+
 /* Payment Flow Visualization */
 .payment-flow-overlay {
   position: fixed;

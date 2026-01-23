@@ -6,54 +6,37 @@ export default function Home() {
     return (
         <main className="container landing">
             <header className="header">
-                <h1>x402 Healthcare Simulation</h1>
+                <div className="matrix-logo-lg">
+                    <span className="matrix-bracket-lg">[</span>
+                    <span className="matrix-text-lg">x402</span>
+                    <span className="matrix-bracket-lg">]</span>
+                </div>
+                <h1>Healthcare Payment Simulation</h1>
                 <p className="subtitle">
                     Experience pay-per-request healthcare interactions using the x402 protocol
                 </p>
                 <span className="badge">🔬 Educational Demo</span>
             </header>
 
-            <div className="version-selector">
-                <h2>Choose Your Experience</h2>
-                <p className="version-subtitle">
-                    Select how you&apos;d like to explore the x402 payment simulation
-                </p>
-
-                <div className="version-cards">
-                    <Link href="/prompt" className="version-card">
-                        <div className="version-icon">📝</div>
-                        <h3>Prompt Version</h3>
-                        <p>
-                            Step-by-step interface with forms and buttons.
-                            Enter your symptoms and interact with each stage manually.
-                        </p>
-                        <div className="version-features">
-                            <span>✓ Form-based input</span>
-                            <span>✓ Detailed controls</span>
-                            <span>✓ Technical view</span>
-                        </div>
-                        <span className="version-cta">Start Prompt Mode →</span>
-                    </Link>
-
-                    <Link href="/simulation" className="version-card simulation">
-                        <div className="version-icon matrix-logo-sm">
-                            <span className="matrix-bracket-sm">[</span>
-                            <span className="matrix-text-sm">x402</span>
-                            <span className="matrix-bracket-sm">]</span>
-                        </div>
-                        <h3>Simulation Version</h3>
-                        <p>
-                            Animated visual experience with character avatars
-                            and speech bubble conversations.
-                        </p>
-                        <div className="version-features">
-                            <span>✓ Character avatars</span>
-                            <span>✓ Speech bubbles</span>
-                            <span>✓ Animated flow</span>
-                        </div>
-                        <span className="version-cta">Start Simulation →</span>
-                    </Link>
+            <div className="hero-section">
+                <div className="hero-content">
+                    <h2>What is x402?</h2>
+                    <p>
+                        The x402 protocol leverages HTTP 402 &quot;Payment Required&quot; status code 
+                        to enable native, programmatic micropayments on the web.
+                    </p>
+                    <ul className="hero-features">
+                        <li>🔐 Server returns 402 → Client pays</li>
+                        <li>💰 Client returns 402 → Server pays</li>
+                        <li>⚡ Instant micropayments per request</li>
+                        <li>🏥 Healthcare data monetization demo</li>
+                    </ul>
                 </div>
+
+                <Link href="/simulation" className="start-button">
+                    <span className="start-icon">▶</span>
+                    <span className="start-text">Start Simulation</span>
+                </Link>
             </div>
 
             <footer className="footer">
