@@ -174,28 +174,28 @@ export default function SimulationPage() {
         setPaymentFlowStep(2);
         await new Promise(r => setTimeout(r, 800));
 
-        if (initialResult.needsPayment) {
-            // Step 3: Send payment and retry
-            setPaymentFlowStep(3);
-            
-            let finalResult;
-            if (paymentMode === "real" && isConnected && isCorrectNetwork) {
-                // Real blockchain payment
-                finalResult = await sendPaymentAndRetry();
-            } else {
-                // Simulated payment
-                await new Promise(r => setTimeout(r, 600));
-                finalResult = await simulatePaymentAndRetry();
-                deductBalance(price);
-            }
-            
-            // Step 4: Show success
-            setPaymentFlowStep(4);
-            
-            if (!finalResult.success) {
-                setActionLoading(false);
-                return;
-            }
+        // Step 3: Send payment and retry
+        setPaymentFlowStep(3);
+        await new Promise(r => setTimeout(r, 600));
+        
+        let finalResult;
+        if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+            // Real blockchain payment
+            finalResult = await sendPaymentAndRetry();
+        } else {
+            // Simulated payment - retry with simulated header
+            finalResult = await simulatePaymentAndRetry();
+            deductBalance(price);
+        }
+        
+        // Step 4: Show success
+        setPaymentFlowStep(4);
+        
+        if (!finalResult.success) {
+            console.error("Payment failed:", finalResult.data);
+            setShowPaymentFlow(false);
+            setActionLoading(false);
+            return;
         }
         
         // Wait for user to close the modal before continuing
@@ -238,7 +238,7 @@ export default function SimulationPage() {
         await new Promise(r => setTimeout(r, 600));
 
         // Make initial x402 request
-        const initialResult = await x402Fetch("/api/assistant/consult", {
+        await x402Fetch("/api/assistant/consult", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ symptoms: "fatigue, headache, trouble sleeping" }),
@@ -248,34 +248,27 @@ export default function SimulationPage() {
         setPaymentFlowStep(2);
         await new Promise(r => setTimeout(r, 800));
 
-        let finalData;
-        if (initialResult.needsPayment) {
-            // Step 3: Send payment and retry
-            setPaymentFlowStep(3);
-            
-            let finalResult;
-            if (paymentMode === "real" && isConnected && isCorrectNetwork) {
-                finalResult = await sendPaymentAndRetry();
-            } else {
-                await new Promise(r => setTimeout(r, 600));
-                finalResult = await simulatePaymentAndRetry();
-                deductBalance(parseFloat(CONSULTATION_FEE));
-            }
-            
-            // Step 4: Show success
-            setPaymentFlowStep(4);
-            finalData = finalResult.data;
+        // Step 3: Send payment and retry
+        setPaymentFlowStep(3);
+        await new Promise(r => setTimeout(r, 600));
+        
+        let finalResult;
+        if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+            finalResult = await sendPaymentAndRetry();
         } else {
-            setPaymentFlowStep(4);
-            finalData = initialResult.data;
+            finalResult = await simulatePaymentAndRetry();
+            deductBalance(parseFloat(CONSULTATION_FEE));
         }
+        
+        // Step 4: Show success
+        setPaymentFlowStep(4);
         
         // Wait for user to close the modal before continuing
         await waitForPaymentFlowClose();
 
         // Process response
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = finalData as any;
+        const data = finalResult.data as any;
         if (data?.success) {
             await simulateTyping(
                 "doctor",
@@ -335,7 +328,7 @@ export default function SimulationPage() {
         await new Promise(r => setTimeout(r, 600));
 
         // Make initial x402 request
-        const initialResult = await x402Fetch("/api/labs/order", {
+        await x402Fetch("/api/labs/order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -349,34 +342,27 @@ export default function SimulationPage() {
         setPaymentFlowStep(2);
         await new Promise(r => setTimeout(r, 800));
 
-        let finalData;
-        if (initialResult.needsPayment) {
-            // Step 3: Send payment and retry
-            setPaymentFlowStep(3);
-            
-            let finalResult;
-            if (paymentMode === "real" && isConnected && isCorrectNetwork) {
-                finalResult = await sendPaymentAndRetry();
-            } else {
-                await new Promise(r => setTimeout(r, 600));
-                finalResult = await simulatePaymentAndRetry();
-                deductBalance(price);
-            }
-            
-            // Step 4: Show success
-            setPaymentFlowStep(4);
-            finalData = finalResult.data;
+        // Step 3: Send payment and retry
+        setPaymentFlowStep(3);
+        await new Promise(r => setTimeout(r, 600));
+        
+        let finalResult;
+        if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+            finalResult = await sendPaymentAndRetry();
         } else {
-            setPaymentFlowStep(4);
-            finalData = initialResult.data;
+            finalResult = await simulatePaymentAndRetry();
+            deductBalance(price);
         }
+        
+        // Step 4: Show success
+        setPaymentFlowStep(4);
 
         // Wait for user to close the modal before continuing
         await waitForPaymentFlowClose();
 
         // Process response
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = finalData as any;
+        const data = finalResult.data as any;
         if (data?.success) {
             setTestResults(data.results);
             await simulateTyping("labtech", "Payment verified on-chain! Here are your test results:", 2000);

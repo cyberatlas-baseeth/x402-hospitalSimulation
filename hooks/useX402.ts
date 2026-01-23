@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
+import { useState, useCallback, useRef } from 'react';
+import { useSendTransaction } from 'wagmi';
 import { parseEther } from 'viem';
 
 interface X402PaymentInfo {
@@ -11,42 +11,36 @@ interface X402PaymentInfo {
   description: string;
 }
 
-interface UseX402Options {
-  onPaymentRequired?: (info: X402PaymentInfo) => void;
-  onPaymentSent?: (txHash: string) => void;
-  onPaymentConfirmed?: (txHash: string) => void;
-  onSuccess?: (data: unknown) => void;
-  onError?: (error: string) => void;
+interface X402Result {
+  success: boolean;
+  data?: unknown;
+  needsPayment?: boolean;
+  paymentInfo?: X402PaymentInfo;
 }
 
-export function useX402(options: UseX402Options = {}) {
+export function useX402() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<X402PaymentInfo | null>(null);
-  const [pendingRequest, setPendingRequest] = useState<{
+  const [txHash, setTxHash] = useState<string | undefined>();
+
+  // Store pending request in ref to avoid state timing issues
+  const pendingRequestRef = useRef<{
     url: string;
     init: RequestInit;
+    paymentInfo: X402PaymentInfo;
   } | null>(null);
 
   const { sendTransactionAsync } = useSendTransaction();
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
-
-  const { isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
 
   /**
-   * Makes an x402-aware fetch request
-   * 1. Sends initial request
-   * 2. If 402, extracts payment info and waits for payment
-   * 3. After payment, retries with X-PAYMENT header
+   * Makes a fetch request and handles 402 response
    */
   const x402Fetch = useCallback(async (
     url: string,
     init: RequestInit = {},
     paymentHeader?: string
-  ): Promise<{ success: boolean; data?: unknown; needsPayment?: boolean; paymentInfo?: X402PaymentInfo }> => {
+  ): Promise<X402Result> => {
     try {
-      // Add payment header if provided
       const headers = new Headers(init.headers);
       if (paymentHeader) {
         headers.set('X-PAYMENT', paymentHeader);
@@ -68,84 +62,74 @@ export function useX402(options: UseX402Options = {}) {
         };
 
         setPaymentInfo(info);
-        setPendingRequest({ url, init });
-        options.onPaymentRequired?.(info);
+        
+        // Store in ref for immediate access
+        pendingRequestRef.current = { url, init, paymentInfo: info };
 
         return { success: false, needsPayment: true, paymentInfo: info };
       }
 
       if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        return { success: false, data: errorData };
       }
 
       const data = await response.json();
-      options.onSuccess?.(data);
       return { success: true, data };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      options.onError?.(message);
-      return { success: false, data: { error: message } };
+      console.error('x402Fetch error:', error);
+      return { success: false, data: { error: 'Request failed' } };
     }
-  }, [options]);
+  }, []);
 
   /**
-   * Sends payment and retries the pending request
+   * Sends real payment and retries the pending request
    */
-  const sendPaymentAndRetry = useCallback(async (): Promise<{
-    success: boolean;
-    data?: unknown;
-    txHash?: string;
-  }> => {
-    if (!paymentInfo || !pendingRequest) {
+  const sendPaymentAndRetry = useCallback(async (): Promise<X402Result> => {
+    const pending = pendingRequestRef.current;
+    if (!pending) {
       return { success: false, data: { error: 'No pending payment' } };
     }
 
     setIsProcessing(true);
 
     try {
-      // Send ETH payment
-      const value = parseEther(paymentInfo.price);
+      const value = parseEther(pending.paymentInfo.price);
       const hash = await sendTransactionAsync({
-        to: paymentInfo.recipient as `0x${string}`,
+        to: pending.paymentInfo.recipient as `0x${string}`,
         value,
       });
 
       setTxHash(hash);
-      options.onPaymentSent?.(hash);
 
-      // Wait a moment for the transaction to be indexed
-      await new Promise(r => setTimeout(r, 2000));
+      // Wait for transaction to be indexed
+      await new Promise(r => setTimeout(r, 3000));
 
-      options.onPaymentConfirmed?.(hash);
-
-      // Retry the original request with payment header
+      // Retry with payment header
       const result = await x402Fetch(
-        pendingRequest.url,
-        pendingRequest.init,
+        pending.url,
+        pending.init,
         `tx:${hash}`
       );
 
+      pendingRequestRef.current = null;
       setPaymentInfo(null);
-      setPendingRequest(null);
       setIsProcessing(false);
 
-      return { ...result, txHash: hash };
+      return { ...result, data: { ...result.data as object, txHash: hash } };
     } catch (error) {
+      console.error('Payment error:', error);
       setIsProcessing(false);
-      const message = error instanceof Error ? error.message : 'Payment failed';
-      options.onError?.(message);
-      return { success: false, data: { error: message } };
+      return { success: false, data: { error: 'Payment failed' } };
     }
-  }, [paymentInfo, pendingRequest, sendTransactionAsync, x402Fetch, options]);
+  }, [sendTransactionAsync, x402Fetch]);
 
   /**
-   * Simulates payment (for demo mode)
+   * Simulates payment and retries the pending request
    */
-  const simulatePaymentAndRetry = useCallback(async (): Promise<{
-    success: boolean;
-    data?: unknown;
-  }> => {
-    if (!pendingRequest) {
+  const simulatePaymentAndRetry = useCallback(async (): Promise<X402Result> => {
+    const pending = pendingRequestRef.current;
+    if (!pending) {
       return { success: false, data: { error: 'No pending request' } };
     }
 
@@ -153,35 +137,62 @@ export function useX402(options: UseX402Options = {}) {
 
     try {
       const result = await x402Fetch(
-        pendingRequest.url,
-        pendingRequest.init,
+        pending.url,
+        pending.init,
         'simulated'
       );
 
+      pendingRequestRef.current = null;
       setPaymentInfo(null);
-      setPendingRequest(null);
       setIsProcessing(false);
 
       return result;
     } catch (error) {
+      console.error('Simulate error:', error);
       setIsProcessing(false);
-      const message = error instanceof Error ? error.message : 'Request failed';
-      return { success: false, data: { error: message } };
+      return { success: false, data: { error: 'Request failed' } };
     }
-  }, [pendingRequest, x402Fetch]);
+  }, [x402Fetch]);
+
+  /**
+   * Direct x402 call - handles the full flow in one call
+   * Useful when you want simpler integration
+   */
+  const x402Call = useCallback(async (
+    url: string,
+    init: RequestInit = {},
+    options: { 
+      mode: 'simulated' | 'real';
+      isConnected?: boolean;
+      isCorrectNetwork?: boolean;
+    }
+  ): Promise<X402Result> => {
+    // First try without payment
+    const initialResult = await x402Fetch(url, init);
+    
+    if (!initialResult.needsPayment) {
+      return initialResult;
+    }
+
+    // Need payment - use appropriate method
+    if (options.mode === 'real' && options.isConnected && options.isCorrectNetwork) {
+      return sendPaymentAndRetry();
+    } else {
+      return simulatePaymentAndRetry();
+    }
+  }, [x402Fetch, sendPaymentAndRetry, simulatePaymentAndRetry]);
 
   return {
     x402Fetch,
+    x402Call,
     sendPaymentAndRetry,
     simulatePaymentAndRetry,
     isProcessing,
     paymentInfo,
     txHash,
-    isTxConfirmed,
     clearPayment: () => {
       setPaymentInfo(null);
-      setPendingRequest(null);
+      pendingRequestRef.current = null;
     },
   };
 }
-
