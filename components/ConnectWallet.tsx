@@ -2,6 +2,7 @@
 
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
+import { formatEther } from 'viem';
 
 export function ConnectWallet() {
   const { address, isConnected, chain } = useAccount();
@@ -13,6 +14,9 @@ export function ConnectWallet() {
     address: address,
     chainId: baseSepolia.id,
   });
+
+  // Format balance from bigint to string
+  const formattedBalance = ethBalance ? formatEther(ethBalance.value) : '0';
 
   if (isConnected && address) {
     const isWrongNetwork = chain?.id !== baseSepolia.id;
@@ -28,7 +32,7 @@ export function ConnectWallet() {
           </span>
           {ethBalance && (
             <span className="wallet-balance">
-              {parseFloat(ethBalance.formatted).toFixed(6)} ETH
+              {parseFloat(formattedBalance).toFixed(6)} ETH
             </span>
           )}
         </div>
@@ -62,11 +66,14 @@ export function useWalletStatus() {
     chainId: baseSepolia.id,
   });
 
+  // Format balance from bigint to number
+  const balanceInEth = ethBalance ? parseFloat(formatEther(ethBalance.value)) : 0;
+
   return {
     address,
     isConnected,
     isCorrectNetwork: chain?.id === baseSepolia.id,
-    ethBalance: ethBalance ? parseFloat(ethBalance.formatted) : 0,
+    ethBalance: balanceInEth,
   };
 }
 
