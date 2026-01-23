@@ -21,11 +21,20 @@ export function ConnectWallet() {
   if (isConnected && address) {
     const isWrongNetwork = chain?.id !== baseSepolia.id;
     
+    // Debug chain detection
+    console.log('[Wallet] Chain detection:', {
+      currentChainId: chain?.id,
+      currentChainName: chain?.name,
+      expectedChainId: baseSepolia.id,
+      expectedChainName: baseSepolia.name,
+      isWrongNetwork,
+    });
+    
     return (
       <div className="wallet-connected">
         <div className="wallet-info">
-          <span className="wallet-network">
-            {isWrongNetwork ? '⚠️ Wrong Network' : '🟢 Base Sepolia'}
+          <span className="wallet-network" title={`Chain ID: ${chain?.id || 'unknown'}`}>
+            {isWrongNetwork ? `⚠️ Wrong Network (${chain?.id})` : '🟢 Base Sepolia'}
           </span>
           <span className="wallet-address">
             {address.slice(0, 6)}...{address.slice(-4)}
