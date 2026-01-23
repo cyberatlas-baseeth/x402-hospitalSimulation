@@ -1,11 +1,11 @@
 # x402 Healthcare Payment Simulation
 
-A Next.js application demonstrating the **x402 protocol** for pay-per-request healthcare interactions. This project showcases an interactive visual simulation with Matrix-inspired aesthetics and real-time payment flow visualization.
+A Next.js application demonstrating the **x402 protocol** with real blockchain payments on **Base Sepolia**. This project showcases an interactive visual simulation with Matrix-inspired aesthetics, MetaMask integration, and on-chain payment verification.
 
 ![x402 Protocol](https://img.shields.io/badge/Protocol-x402-00ff41)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
-![Aesthetics](https://img.shields.io/badge/Aesthetics-Matrix--Core-00ff41)
-![Vercel Ready](https://img.shields.io/badge/Vercel-Ready-black)
+![Base Sepolia](https://img.shields.io/badge/Network-Base%20Sepolia-0052FF)
+![wagmi](https://img.shields.io/badge/wagmi-v2-black)
 
 🔗 **Live Demo:** [x402-hospital-simulation.vercel.app](https://x402-hospital-simulation.vercel.app)
 
@@ -16,10 +16,24 @@ A Next.js application demonstrating the **x402 protocol** for pay-per-request he
 **This is a SIMULATION for educational and demonstration purposes only.**
 
 - ❌ No real medical diagnosis, treatment, or prescriptions
-- ❌ No actual blockchain transactions or payments
+- ✅ Real blockchain transactions on Base Sepolia **testnet**
 - ❌ No real health data processing
 - ✅ Educational demonstration of x402 concepts
-- ✅ Simulated payment flows with mock data
+- ✅ MetaMask integration with test ETH
+
+---
+
+## 🆕 What's New: Real x402 Implementation
+
+This project now features **actual x402 protocol implementation**:
+
+| Feature | Description |
+|---------|-------------|
+| 🦊 **MetaMask Integration** | Connect wallet and pay with real (testnet) ETH |
+| ⛓️ **Base Sepolia Network** | All payments on Base Sepolia testnet |
+| 🔐 **Real 402 Responses** | APIs return HTTP 402 with payment requirements |
+| ✅ **On-chain Verification** | Server verifies transactions on blockchain |
+| 🔄 **Auto Chain Switch** | Automatically prompts to switch to Base Sepolia |
 
 ---
 
@@ -34,186 +48,77 @@ The **x402 protocol** leverages the HTTP 402 "Payment Required" status code to e
 💰 Client returns 402 → Server pays
 ```
 
-This simple rule enables bidirectional payments - services can charge users, OR users can charge services for their data!
-
-### Standard Flow (Client Pays)
+### Real x402 Flow (This App)
 
 ```
-┌─────────┐                              ┌─────────┐
-│ Client  │ ──── POST /api/resource ───► │ Server  │
-│         │ ◄─────── HTTP 402 ────────── │         │
-│         │     { price: "0.01 USDC" }   │         │
-│         │                              │         │
-│         │ ── POST + X-PAYMENT header ─►│         │
-│         │ ◄─────── HTTP 200 ────────── │         │
-│         │     { data: "..." }          │         │
-└─────────┘                              └─────────┘
-```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        x402 PROTOCOL FLOW                            │
+└──────────────────────────────────────────────────────────────────────┘
 
-### Reverse Flow (Server Pays)
-
-```
-┌─────────┐                              ┌─────────┐
-│ Client  │ ◄──── GET /user/data ─────── │ Server  │
-│         │ ──────── HTTP 402 ─────────► │         │
-│         │     { price: "0.01 USDC" }   │         │
-│         │                              │         │
-│         │ ◄─── X-PAYMENT header ────── │         │
-│         │ ──────── HTTP 200 ─────────► │         │
-│         │     { data: "..." }          │         │
-└─────────┘                              └─────────┘
-```
-
----
-
-## 🎮 Simulation Features
-
-### 🤖 AI Expert Selection
-Choose your AI medical assistant with different consultation fees:
-- **Grok** - 0.005 USDC
-- **ChatGPT** - 0.008 USDC  
-- **Claude** - 0.006 USDC
-
-### 💬 Interactive Chat Interface
-- Real-time typing effects
-- Character avatars and speech bubbles
-- Dynamic USDC balance tracking
-
-### 📊 Payment Flow Visualization
-Every payment triggers a visual modal showing the x402 protocol in action:
-
-```
-┌─────────────────────────────────────────────────────┐
-│  🔐 x402 Payment Protocol                       [✕] │
-│  Endpoint: /api/assistant/consult                   │
-├─────────────────────────────────────────────────────┤
-│  💻 Client          ──────►          🖥️ Server      │
-│                                                     │
-│  [POST] Request (no payment)         ────►          │
-│                                      ◄────          │
-│              [402] Payment Required                 │
-│              { price: "0.002 USDC" }                │
-│                                                     │
-│  [POST] + X-PAYMENT: simulated       ────►          │
-│                                      ◄────          │
-│              [200] Success!                         │
-├─────────────────────────────────────────────────────┤
-│  ✅ Payment verified! Receiving data...             │
-└─────────────────────────────────────────────────────┘
-```
-
-### 💰 Data Monetization (Reverse Payment)
-Users can SELL their health data - the server pays the client:
-
-```
-┌─────────────────────────────────────────────────────┐
-│  🔐 x402 Protocol (Client → 402)                [✕] │
-│  Endpoint: /api/data-evaluator/accept               │
-├─────────────────────────────────────────────────────┤
-│  💻 Client          ◄──────          🖥️ Server      │
-│                                                     │
-│              [GET] Request user data                │
-│  [402] Payment Required              ────►          │
-│  { price: "0.011 USDC" }                            │
-│                                                     │
-│              [X-PAYMENT] +0.011 USDC ◄────          │
-│  [200] Data access granted           ────►          │
-├─────────────────────────────────────────────────────┤
-│  ✅ Payment received! Granting data access.         │
-└─────────────────────────────────────────────────────┘
+    CLIENT                                                    SERVER
+      │                                                          │
+      │  1. POST /api/assistant/consult                         │
+      │     (no X-PAYMENT header)                               │
+      │ ────────────────────────────────────────────────────────►│
+      │                                                          │
+      │  2. HTTP 402 Payment Required                           │
+      │     {                                                    │
+      │       "x402": {                                          │
+      │         "price": "0.0002",                               │
+      │         "currency": "ETH",                               │
+      │         "recipient": "0x...",                            │
+      │         "network": "base-sepolia"                        │
+      │       }                                                  │
+      │     }                                                    │
+      │ ◄────────────────────────────────────────────────────────│
+      │                                                          │
+      │  3. ETH Transfer via MetaMask                           │
+      │ ────────────────────────► Base Sepolia Blockchain        │
+      │                                                          │
+      │  4. POST /api/assistant/consult                         │
+      │     X-PAYMENT: tx:0x123abc...                           │
+      │ ────────────────────────────────────────────────────────►│
+      │                                                          │
+      │                    5. Verify tx on-chain                │
+      │                       ✓ Recipient correct               │
+      │                       ✓ Amount sufficient               │
+      │                       ✓ Transaction confirmed           │
+      │                                                          │
+      │  6. HTTP 200 OK                                         │
+      │     { "success": true, "analysis": {...} }              │
+      │ ◄────────────────────────────────────────────────────────│
 ```
 
 ---
 
-## 🏗️ Project Structure
+## 🎮 Two Payment Modes
 
-```
-x402-hospitalsim/
-├── app/
-│   ├── simulation/         # Interactive chat-based simulation
-│   ├── api/                # x402 compliant API routes
-│   │   ├── assistant/      # AI consultation (402 protected)
-│   │   ├── labs/           # Laboratory services
-│   │   └── data-evaluator/ # Data monetization (reverse 402)
-│   ├── globals.css         # Matrix-style design system
-│   ├── page.tsx            # Landing page
-│   └── layout.tsx          # Root layout
-├── lib/
-│   ├── paymentSimulator.ts # x402 payment simulation logic
-│   └── mockData.ts         # Healthcare data generators
-├── public/
-│   ├── avatars/            # AI expert avatars
-│   ├── banana-client.svg   # Client icon for flow diagram
-│   └── banana-server.svg   # Server icon for flow diagram
-└── package.json
-```
+### 🎮 Simulated Mode (Default)
+- No wallet needed
+- Uses mock balance (0.1 ETH)
+- Perfect for testing UI/UX
 
----
-
-## 🏥 Application Flow
-
-| Step | Action | Payment Direction | Cost |
-|------|--------|-------------------|------|
-| 1 | Select AI Expert | Client → Server | 0.005-0.008 USDC |
-| 2 | Describe Symptoms | Client → Server | 0.002 USDC |
-| 3 | Browse Lab Offers | Free | - |
-| 4 | Order Lab Tests | Client → Server | 0.012-0.025 USDC |
-| 5 | Sell Health Data | Server → Client | +0.011 USDC |
-| 6 | Get Analysis | Free (with access token) | - |
-
----
-
-## 🔧 API Endpoints
-
-### `POST /api/assistant/consult`
-AI Health Assistant consultation. **Requires payment.**
-
-```json
-// Request (without X-PAYMENT header)
-{ "symptoms": "fatigue, headache" }
-
-// Response: HTTP 402
-{
-  "status": 402,
-  "payment_info": {
-    "price": "0.002",
-    "currency": "USDC",
-    "payment_required": true
-  }
-}
-
-// Request (with X-PAYMENT: simulated)
-// Response: HTTP 200
-{
-  "success": true,
-  "analysis": {
-    "recommended_tests": ["Complete Blood Count", "Vitamin D"]
-  }
-}
-```
-
-### `GET /api/labs/offers`
-Get laboratory offers. **Free access.**
-
-### `POST /api/labs/order`
-Place lab test order. **Requires payment.**
-
-### `POST /api/data-evaluator/offer`
-Request data purchase offer from bot. **Free.**
-
-### `POST /api/data-evaluator/accept`
-Accept offer - **Client returns 402, Server pays.**
-
-### `GET /api/data-evaluator/result`
-Get evaluation results. **Requires X-ACCESS-TOKEN.**
+### ⛓️ Base Sepolia Mode
+- Requires MetaMask
+- Real transactions on testnet
+- On-chain payment verification
 
 ---
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- Node.js 18+
+- MetaMask browser extension
+- Base Sepolia testnet ETH (from faucet)
+
+### Installation
+
 ```bash
 # Clone the repository
 git clone https://github.com/cyberatlas-baseeth/x402-hospitalSimulation.git
+cd x402-hospitalSimulation
 
 # Install dependencies
 npm install
@@ -224,6 +129,104 @@ npm run dev
 # Open http://localhost:3000
 ```
 
+### Get Test ETH
+
+1. **Alchemy Faucet:** https://www.alchemy.com/faucets/base-sepolia
+2. **QuickNode Faucet:** https://faucet.quicknode.com/base/sepolia
+3. **Coinbase Faucet:** https://portal.cdp.coinbase.com/products/faucet
+
+---
+
+## 🏗️ Project Structure
+
+```
+x402-hospitalsim/
+├── app/
+│   ├── simulation/           # Interactive chat-based simulation
+│   │   └── page.tsx          # Main simulation with x402 flow
+│   ├── api/                  # x402 compliant API routes
+│   │   ├── assistant/        # AI consultation (402 protected)
+│   │   ├── expert/           # Expert selection (402 protected)
+│   │   ├── labs/             # Laboratory services
+│   │   └── data-evaluator/   # Data monetization (reverse 402)
+│   ├── providers.tsx         # Wagmi + React Query providers
+│   ├── globals.css           # Matrix-style design system
+│   ├── page.tsx              # Landing page
+│   └── layout.tsx            # Root layout with providers
+├── components/
+│   └── ConnectWallet.tsx     # MetaMask connection component
+├── hooks/
+│   └── useX402.ts            # x402 protocol hook (402 → pay → retry)
+├── lib/
+│   ├── x402.ts               # Server-side x402 middleware
+│   ├── wagmiConfig.ts        # Wagmi configuration (Base Sepolia)
+│   └── mockData.ts           # Healthcare data generators
+├── public/
+│   ├── avatars/              # AI expert avatars
+│   ├── banana-client.svg     # Client icon for flow diagram
+│   └── banana-server.svg     # Server icon for flow diagram
+└── package.json
+```
+
+---
+
+## 🔧 API Endpoints
+
+All protected endpoints return **HTTP 402** without valid payment.
+
+### `POST /api/expert/select`
+Select AI expert. **Requires payment.**
+
+```bash
+# Without payment → 402
+curl -X POST https://your-app.vercel.app/api/expert/select \
+  -H "Content-Type: application/json" \
+  -d '{"expert_id": "grok", "price": "0.0005"}'
+
+# Response: HTTP 402
+{
+  "status": 402,
+  "x402": {
+    "version": "1.0",
+    "price": "0.0005",
+    "currency": "ETH",
+    "network": "base-sepolia",
+    "recipient": "0x..."
+  }
+}
+
+# With payment → 200
+curl -X POST https://your-app.vercel.app/api/expert/select \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: tx:0x123abc..." \
+  -d '{"expert_id": "grok", "price": "0.0005"}'
+```
+
+### `POST /api/assistant/consult`
+AI Health consultation. **Requires payment (0.0002 ETH).**
+
+### `POST /api/labs/order`
+Place lab test order. **Requires payment (0.0012-0.0025 ETH).**
+
+### `GET /api/labs/offers`
+Get laboratory offers. **Free access.**
+
+### `POST /api/data-evaluator/accept`
+Accept data offer - **Reverse x402 (Server pays Client).**
+
+---
+
+## 🏥 Application Flow
+
+| Step | Action | Payment Direction | Cost (ETH) |
+|------|--------|-------------------|------------|
+| 1 | Select AI Expert | Client → Server | 0.0005-0.0008 |
+| 2 | Describe Symptoms | Client → Server | 0.0002 |
+| 3 | Browse Lab Offers | Free | - |
+| 4 | Order Lab Tests | Client → Server | 0.0012-0.0025 |
+| 5 | Sell Health Data | Server → Client | +0.0011 |
+| 6 | Get Analysis | Free | - |
+
 ---
 
 ## 🌐 Deploy on Vercel
@@ -232,11 +235,52 @@ npm run dev
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cyberatlas-baseeth/x402-hospitalSimulation)
 
-### Manual Deployment
+### Environment Variables (Optional)
 
-1. Push code to GitHub
-2. Import project in [Vercel Dashboard](https://vercel.com/new)
-3. Deploy (no environment variables needed)
+```env
+# Wallet address to receive payments
+NEXT_PUBLIC_RECEIVER_WALLET=0xYourWalletAddress
+```
+
+If not set, payments go to a default address.
+
+---
+
+## 🔐 x402 Implementation Details
+
+### Server-Side (`lib/x402.ts`)
+
+```typescript
+// Middleware for protected routes
+const { authorized, response } = await requirePayment(
+  request,
+  "0.0002",  // Price in ETH
+  "AI Consultation Fee"
+);
+
+if (!authorized) {
+  return response; // Returns 402 with payment details
+}
+
+// Payment verified - continue with request
+```
+
+### Client-Side (`hooks/useX402.ts`)
+
+```typescript
+const { x402Fetch, sendPaymentAndRetry } = useX402();
+
+// Make request - will get 402
+const result = await x402Fetch("/api/assistant/consult", {
+  method: "POST",
+  body: JSON.stringify({ symptoms: "..." })
+});
+
+if (result.needsPayment) {
+  // Send ETH and retry automatically
+  const finalResult = await sendPaymentAndRetry();
+}
+```
 
 ---
 
@@ -244,21 +288,24 @@ npm run dev
 
 The UI features a **Matrix-inspired** aesthetic:
 
-- **Primary Color:** Neon Green `#00ff41`
-- **Background:** Dark terminals `#0d1117`
-- **Accents:** Blue `#3b82f6` (Client), Purple `#8b5cf6` (Server)
-- **Font:** Courier New (monospace)
-- **Effects:** Glow animations, pulse effects
+| Element | Value |
+|---------|-------|
+| Primary Color | Neon Green `#00ff41` |
+| Background | Dark terminal `#0d1117` |
+| Client Accent | Blue `#3b82f6` |
+| Server Accent | Purple `#8b5cf6` |
+| Font | Courier New (monospace) |
+| Effects | Glow animations, pulse effects |
 
 ---
 
-## 🛡️ Ethical Constraints
+## 🛡️ Security Features
 
-- ✅ All outputs are informational only
-- ✅ No real medical advice or diagnosis
-- ✅ Patient retains full data control
-- ✅ Clear consent flow for data sharing
-- ✅ Every response includes disclaimers
+- ✅ On-chain transaction verification
+- ✅ Replay attack protection (tx hash caching)
+- ✅ Amount validation with tolerance
+- ✅ Recipient address verification
+- ✅ Chain ID enforcement (Base Sepolia only)
 
 ---
 
@@ -266,8 +313,21 @@ The UI features a **Matrix-inspired** aesthetic:
 
 - [x402 Protocol](https://www.x402.org/) - Official documentation
 - [HTTP 402 Status Code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402) - MDN
-- [x402-open](https://github.com/VanshSahay/x402-open) - Decentralized facilitator toolkit
-- [Next.js Documentation](https://nextjs.org/docs)
+- [Base Sepolia](https://docs.base.org/docs/network-information) - Network info
+- [wagmi Documentation](https://wagmi.sh/) - React hooks for Ethereum
+- [viem Documentation](https://viem.sh/) - TypeScript Ethereum library
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| Next.js 16 | React framework |
+| wagmi v2 | Ethereum React hooks |
+| viem | Ethereum interactions |
+| Base Sepolia | Testnet blockchain |
+| Vercel | Deployment |
 
 ---
 
@@ -279,5 +339,5 @@ MIT License - This project is for educational purposes.
 
 <p align="center">
   <strong>[ x402 ]</strong><br>
-  <em>Pay-per-request healthcare simulation</em>
+  <em>Real pay-per-request healthcare simulation on Base Sepolia</em>
 </p>
