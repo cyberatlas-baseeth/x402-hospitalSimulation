@@ -55,18 +55,20 @@ export function ConnectWallet() {
     );
   }
 
+  // Find MetaMask connector (or first available injected wallet)
+  const metaMaskConnector = connectors.find(c => c.name === 'MetaMask') || connectors[0];
+
   return (
     <div className="wallet-connect">
-      {connectors.map((connector) => (
+      {metaMaskConnector && (
         <button
-          key={connector.uid}
           className="btn-connect"
-          onClick={() => connect({ connector })}
+          onClick={() => connect({ connector: metaMaskConnector })}
           disabled={isPending}
         >
-          {isPending ? 'Connecting...' : `Connect ${connector.name}`}
+          {isPending ? 'Connecting...' : '🦊 Connect MetaMask'}
         </button>
-      ))}
+      )}
     </div>
   );
 }
