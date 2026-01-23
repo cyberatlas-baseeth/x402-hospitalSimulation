@@ -179,12 +179,13 @@ export default function SimulationPage() {
         await new Promise(r => setTimeout(r, 600));
         
         // Debug: Log payment mode decision
-        console.log('[x402] Payment decision:', {
+        console.log('[x402] Payment decision:', JSON.stringify({
             paymentMode,
             isConnected,
             isCorrectNetwork,
+            address: address || 'not connected',
             willUseRealPayment: paymentMode === "real" && isConnected && isCorrectNetwork,
-        });
+        }, null, 2));
         
         let finalResult;
         if (paymentMode === "real" && isConnected && isCorrectNetwork) {
