@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-    create402Response,
-    hasValidPayment,
-    MEDICAL_DISCLAIMER,
-} from "@/lib/paymentSimulator";
+import { requirePayment } from "@/lib/x402";
 import { analyzeSymptoms } from "@/lib/mockData";
 
 /**
@@ -11,26 +7,29 @@ import { analyzeSymptoms } from "@/lib/mockData";
  * 
  * AI Health Assistant Consultation Endpoint
  * 
- * x402 Flow:
- * 1. First request without payment → Returns 402 with payment info
- * 2. Request with X-PAYMENT: simulated → Returns consultation results
+ * x402 Protocol Flow:
+ * 1. First request without payment → Returns 402 with payment details
+ * 2. Client makes payment on Base Sepolia
+ * 3. Request with X-PAYMENT: tx:0x... → Verifies payment, returns results
  * 
- * Cost: 0.002 USDC (simulated)
+ * Cost: 0.0002 ETH
  */
-export async function POST(request: NextRequest) {
-    // Check for payment header
-    if (!hasValidPayment(request.headers)) {
-        // Return 402 Payment Required
-        const paymentResponse = create402Response(
-            "0.002",
-            "AI Health Assistant Consultation Fee",
-            "ai-health-assistant"
-        );
 
-        return NextResponse.json(paymentResponse, { status: 402 });
+const CONSULTATION_PRICE = "0.0002";
+
+export async function POST(request: NextRequest) {
+    // x402: Check payment
+    const { authorized, response } = await requirePayment(
+        request,
+        CONSULTATION_PRICE,
+        "AI Health Assistant Consultation Fee"
+    );
+
+    if (!authorized) {
+        return response;
     }
 
-    // Payment received - process the consultation
+    // Payment verified - process the consultation
     try {
         const body = await request.json();
         const symptoms = body.symptoms || "general health inquiry";
@@ -41,16 +40,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             consultation_id: `consult_${Date.now()}`,
-            disclaimer: MEDICAL_DISCLAIMER,
+            x402: {
+                payment_verified: true,
+                amount: `${CONSULTATION_PRICE} ETH`,
+                network: "base-sepolia",
+            },
+            disclaimer: "This is NOT medical advice. For informational purposes only.",
             analysis: {
                 observed_symptoms: analysis.observed_symptoms,
                 possible_considerations: analysis.possible_considerations,
                 recommended_tests: analysis.recommended_tests,
                 general_guidance: analysis.general_guidance,
             },
-            payment_confirmed: true,
-            amount_paid: "0.002 USDC",
-            note: "This is a simulation. No actual payment was processed.",
         });
     } catch {
         return NextResponse.json(

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { create402Response, hasValidPayment } from "@/lib/paymentSimulator";
+import { requirePayment } from "@/lib/x402";
 import { generateTestResults } from "@/lib/mockData";
 
 /**
@@ -7,11 +7,12 @@ import { generateTestResults } from "@/lib/mockData";
  * 
  * Lab Test Order Endpoint
  * 
- * x402 Flow:
+ * x402 Protocol Flow:
  * 1. First request without payment → Returns 402 with lab price
- * 2. Request with X-PAYMENT: simulated → Processes order and returns results
+ * 2. Client makes payment on Base Sepolia
+ * 3. Request with X-PAYMENT: tx:0x... → Verifies payment, processes order
  * 
- * Cost: Varies based on selected lab
+ * Cost: Varies based on selected lab (0.0012 - 0.0025 ETH)
  */
 export async function POST(request: NextRequest) {
     try {
@@ -25,20 +26,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const orderPrice = price || "0.015";
+        const orderPrice = price || "0.0015";
 
-        // Check for payment header
-        if (!hasValidPayment(request.headers)) {
-            const paymentResponse = create402Response(
-                orderPrice,
-                `Lab Test Order - ${tests.length} test(s)`,
-                `lab-${lab_id}`
-            );
+        // x402: Check payment
+        const { authorized, response } = await requirePayment(
+            request,
+            orderPrice,
+            `Lab Test Order - ${tests.length} test(s)`
+        );
 
-            return NextResponse.json(paymentResponse, { status: 402 });
+        if (!authorized) {
+            return response;
         }
 
-        // Payment received - process the order and return results
+        // Payment verified - process the order and return results
         const results = generateTestResults(tests);
 
         return NextResponse.json({
@@ -47,8 +48,11 @@ export async function POST(request: NextRequest) {
             lab_id: lab_id,
             tests_ordered: tests,
             results: results,
-            payment_confirmed: true,
-            amount_paid: `${orderPrice} USDC`,
+            x402: {
+                payment_verified: true,
+                amount: `${orderPrice} ETH`,
+                network: "base-sepolia",
+            },
             result_date: new Date().toISOString(),
             disclaimer:
                 "These are simulated test results for demonstration purposes only. " +

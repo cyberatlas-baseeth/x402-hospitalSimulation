@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ConnectWallet, useWalletStatus } from "@/components/ConnectWallet";
-import { usePayment } from "@/hooks/usePayment";
+import { useX402 } from "@/hooks/useX402";
 
 // Types
 interface LabOffer {
@@ -68,7 +68,16 @@ export default function SimulationPage() {
     
     // Wallet status for real payments
     const { isConnected, isCorrectNetwork, ethBalance, address } = useWalletStatus();
-    const { sendPayment, isPending: isPaymentPending, isConfirming, txHash } = usePayment();
+    
+    // x402 protocol hook
+    const { 
+        x402Fetch, 
+        sendPaymentAndRetry, 
+        simulatePaymentAndRetry,
+        isProcessing: isX402Processing,
+        paymentInfo,
+        txHash 
+    } = useX402();
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [labOffers, setLabOffers] = useState<LabOffer[]>([]);
@@ -106,21 +115,13 @@ export default function SimulationPage() {
         }
     };
 
-    const deductBalance = async (amount: number) => {
-        if (paymentMode === "real" && isConnected && isCorrectNetwork) {
-            // Real payment via MetaMask
-            try {
-                await sendPayment(amount.toString());
-                // Balance will update automatically from wallet
-            } catch (error) {
-                console.error("Real payment failed:", error);
-                // Fallback to simulated
-                setBalance((prev) => Math.max(0, prev - amount));
-            }
-        } else {
-            // Simulated payment
+    const deductBalance = (amount: number) => {
+        // In simulated mode, deduct from local balance
+        // In real mode, balance is deducted via blockchain transfer (handled by x402 hook)
+        if (paymentMode === "simulated") {
             setBalance((prev) => Math.max(0, prev - amount));
         }
+        // Real mode: wallet balance updates automatically after tx
     };
 
     const addBalance = (amount: number) => {
@@ -143,31 +144,65 @@ export default function SimulationPage() {
         addMessage(sender, text);
     };
 
-    // Step 0: Select AI Expert
+    // Step 0: Select AI Expert (x402 Protocol)
     const selectExpert = async (expert: AIExpert) => {
         setActionLoading(true);
         setSelectedExpert(expert);
 
         const price = parseFloat(expert.price);
 
-        // Start payment flow visualization for expert selection
-        setPaymentFlowEndpoint(`/api/expert/${expert.id}`);
+        // Start payment flow visualization
+        setPaymentFlowEndpoint(`/api/expert/select`);
         setShowPaymentFlow(true);
+        
+        // Step 1: Initial request (will get 402)
         setPaymentFlowStep(1);
         await new Promise(r => setTimeout(r, 600));
+
+        // Make initial x402 request
+        const initialResult = await x402Fetch("/api/expert/select", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                expert_id: expert.id, 
+                expert_name: expert.name, 
+                price: expert.price 
+            }),
+        });
+
+        // Step 2: Show 402 response
         setPaymentFlowStep(2);
         await new Promise(r => setTimeout(r, 800));
-        setPaymentFlowStep(3);
-        await new Promise(r => setTimeout(r, 600));
-        setPaymentFlowStep(4);
+
+        if (initialResult.needsPayment) {
+            // Step 3: Send payment and retry
+            setPaymentFlowStep(3);
+            
+            let finalResult;
+            if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+                // Real blockchain payment
+                finalResult = await sendPaymentAndRetry();
+            } else {
+                // Simulated payment
+                await new Promise(r => setTimeout(r, 600));
+                finalResult = await simulatePaymentAndRetry();
+                deductBalance(price);
+            }
+            
+            // Step 4: Show success
+            setPaymentFlowStep(4);
+            
+            if (!finalResult.success) {
+                setActionLoading(false);
+                return;
+            }
+        }
         
         // Wait for user to close the modal before continuing
         await waitForPaymentFlowClose();
 
         // Small delay to ensure modal is fully closed
         await new Promise(r => setTimeout(r, 100));
-
-        await deductBalance(price);
 
         NAMES.doctor = expert.name;
         AVATARS.doctor = expert.avatar;
@@ -187,7 +222,7 @@ export default function SimulationPage() {
     // Consultation fee
     const CONSULTATION_FEE = "0.0002";
 
-    // Step 1: Start consultation
+    // Step 1: Start consultation (x402 Protocol)
     const startConsultation = async () => {
         setActionLoading(true);
         addMessage("patient", "Hello doctor, I've been feeling very tired lately, having headaches, and trouble sleeping.");
@@ -197,39 +232,59 @@ export default function SimulationPage() {
         // Start payment flow visualization for consultation
         setPaymentFlowEndpoint("/api/assistant/consult");
         setShowPaymentFlow(true);
+        
+        // Step 1: Initial request (will get 402)
         setPaymentFlowStep(1);
         await new Promise(r => setTimeout(r, 600));
+
+        // Make initial x402 request
+        const initialResult = await x402Fetch("/api/assistant/consult", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ symptoms: "fatigue, headache, trouble sleeping" }),
+        });
+
+        // Step 2: Show 402 response
         setPaymentFlowStep(2);
         await new Promise(r => setTimeout(r, 800));
-        setPaymentFlowStep(3);
-        await new Promise(r => setTimeout(r, 600));
-        setPaymentFlowStep(4);
+
+        let finalData;
+        if (initialResult.needsPayment) {
+            // Step 3: Send payment and retry
+            setPaymentFlowStep(3);
+            
+            let finalResult;
+            if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+                finalResult = await sendPaymentAndRetry();
+            } else {
+                await new Promise(r => setTimeout(r, 600));
+                finalResult = await simulatePaymentAndRetry();
+                deductBalance(parseFloat(CONSULTATION_FEE));
+            }
+            
+            // Step 4: Show success
+            setPaymentFlowStep(4);
+            finalData = finalResult.data;
+        } else {
+            setPaymentFlowStep(4);
+            finalData = initialResult.data;
+        }
         
         // Wait for user to close the modal before continuing
         await waitForPaymentFlowClose();
 
-        // Deduct consultation fee after user confirms
-        await deductBalance(parseFloat(CONSULTATION_FEE));
-
-        try {
-            const res = await fetch("/api/assistant/consult", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-PAYMENT": paymentMode === "real" ? `tx:${txHash || "pending"}` : "simulated" },
-                body: JSON.stringify({ symptoms: "fatigue, headache, trouble sleeping" }),
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                await simulateTyping(
-                    "doctor",
-                    `Based on your symptoms, I recommend these tests: ${data.analysis.recommended_tests.join(", ")}. Let me connect you with our lab network.`,
-                    2000
-                );
-                setStep(2);
-            }
-        } catch (error) {
-            console.error(error);
+        // Process response
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = finalData as any;
+        if (data?.success) {
+            await simulateTyping(
+                "doctor",
+                `Based on your symptoms, I recommend these tests: ${data.analysis.recommended_tests.join(", ")}. Let me connect you with our lab network.`,
+                2000
+            );
+            setStep(2);
         }
+        
         setActionLoading(false);
     };
 
@@ -263,7 +318,7 @@ export default function SimulationPage() {
         setActionLoading(false);
     };
 
-    // Step 3: Order tests
+    // Step 3: Order tests (x402 Protocol)
     const orderTests = async () => {
         if (!selectedLab) return;
         setActionLoading(true);
@@ -274,40 +329,60 @@ export default function SimulationPage() {
         // Start payment flow visualization
         setPaymentFlowEndpoint("/api/labs/order");
         setShowPaymentFlow(true);
+        
+        // Step 1: Initial request (will get 402)
         setPaymentFlowStep(1);
         await new Promise(r => setTimeout(r, 600));
+
+        // Make initial x402 request
+        const initialResult = await x402Fetch("/api/labs/order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                lab_id: selectedLab.lab_id,
+                tests: selectedLab.tests,
+                price: selectedLab.price,
+            }),
+        });
+
+        // Step 2: Show 402 response
         setPaymentFlowStep(2);
         await new Promise(r => setTimeout(r, 800));
-        setPaymentFlowStep(3);
-        await new Promise(r => setTimeout(r, 600));
-        setPaymentFlowStep(4);
+
+        let finalData;
+        if (initialResult.needsPayment) {
+            // Step 3: Send payment and retry
+            setPaymentFlowStep(3);
+            
+            let finalResult;
+            if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+                finalResult = await sendPaymentAndRetry();
+            } else {
+                await new Promise(r => setTimeout(r, 600));
+                finalResult = await simulatePaymentAndRetry();
+                deductBalance(price);
+            }
+            
+            // Step 4: Show success
+            setPaymentFlowStep(4);
+            finalData = finalResult.data;
+        } else {
+            setPaymentFlowStep(4);
+            finalData = initialResult.data;
+        }
 
         // Wait for user to close the modal before continuing
         await waitForPaymentFlowClose();
 
-        // Deduct balance after user confirms
-        await deductBalance(price);
-
-        try {
-            const res = await fetch("/api/labs/order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-PAYMENT": paymentMode === "real" ? `tx:${txHash || "pending"}` : "simulated" },
-                body: JSON.stringify({
-                    lab_id: selectedLab.lab_id,
-                    tests: selectedLab.tests,
-                    price: selectedLab.price,
-                }),
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                setTestResults(data.results);
-                await simulateTyping("labtech", "Payment received! Here are your test results:", 2000);
-                setStep(4);
-            }
-        } catch (error) {
-            console.error(error);
+        // Process response
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = finalData as any;
+        if (data?.success) {
+            setTestResults(data.results);
+            await simulateTyping("labtech", "Payment verified on-chain! Here are your test results:", 2000);
+            setStep(4);
         }
+        
         setActionLoading(false);
     };
 
