@@ -88,6 +88,7 @@ export function useX402() {
   const sendPaymentAndRetry = useCallback(async (): Promise<X402Result> => {
     const pending = pendingRequestRef.current;
     if (!pending) {
+      console.error('[x402] No pending payment request');
       return { success: false, data: { error: 'No pending payment' } };
     }
 
@@ -95,11 +96,22 @@ export function useX402() {
 
     try {
       const value = parseEther(pending.paymentInfo.price);
+      const recipient = pending.paymentInfo.recipient as `0x${string}`;
+      
+      console.log('[x402] Sending payment:', {
+        to: recipient,
+        value: pending.paymentInfo.price + ' ETH',
+        valueWei: value.toString(),
+      });
+
       const hash = await sendTransactionAsync({
-        to: pending.paymentInfo.recipient as `0x${string}`,
+        to: recipient,
         value,
       });
 
+      console.log('[x402] Transaction sent:', hash);
+      console.log('[x402] View on BaseScan: https://sepolia.basescan.org/tx/' + hash);
+      
       setTxHash(hash);
 
       // Wait for transaction to be indexed
@@ -117,10 +129,12 @@ export function useX402() {
       setIsProcessing(false);
 
       return { ...result, data: { ...result.data as object, txHash: hash } };
-    } catch (error) {
-      console.error('Payment error:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[x402] Payment error:', errorMessage);
+      console.error('[x402] Full error:', error);
       setIsProcessing(false);
-      return { success: false, data: { error: 'Payment failed' } };
+      return { success: false, data: { error: `Payment failed: ${errorMessage}` } };
     }
   }, [sendTransactionAsync, x402Fetch]);
 
