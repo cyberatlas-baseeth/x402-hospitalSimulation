@@ -1409,6 +1409,21 @@ body {
   width: fit-content;
 }
 
+.message-method.reverse {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  animation: reversePulse 1s ease infinite;
+}
+
+@keyframes reversePulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); }
+}
+
+.flow-message.payment {
+  border-right: 3px solid #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+
 .message-status {
   background: #ef4444;
   color: white;
@@ -1474,6 +1489,22 @@ body {
   animation: none;
 }
 
+.status-text.money {
+  color: #22c55e;
+  animation: moneyPulse 0.8s ease infinite;
+}
+
+@keyframes moneyPulse {
+  0%, 100% { 
+    opacity: 1; 
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+  }
+  50% { 
+    opacity: 0.8; 
+    text-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+  }
+}
+
 @keyframes statusBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
@@ -1487,6 +1518,20 @@ body {
   overflow: hidden;
   border: 1px solid rgba(239, 68, 68, 0.3);
   animation: slideIn 0.4s ease;
+}
+
+.http-response-block.reverse {
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
+}
+
+.http-response-block.reverse .response-header {
+  background: rgba(34, 197, 94, 0.15);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.response-status-badge.success {
+  color: #22c55e;
 }
 
 @keyframes slideIn {
