@@ -178,12 +178,22 @@ export default function SimulationPage() {
         setPaymentFlowStep(3);
         await new Promise(r => setTimeout(r, 600));
         
+        // Debug: Log payment mode decision
+        console.log('[x402] Payment decision:', {
+            paymentMode,
+            isConnected,
+            isCorrectNetwork,
+            willUseRealPayment: paymentMode === "real" && isConnected && isCorrectNetwork,
+        });
+        
         let finalResult;
         if (paymentMode === "real" && isConnected && isCorrectNetwork) {
             // Real blockchain payment
+            console.log('[x402] Using REAL blockchain payment via MetaMask');
             finalResult = await sendPaymentAndRetry();
         } else {
             // Simulated payment - retry with simulated header
+            console.log('[x402] Using SIMULATED payment (no MetaMask)');
             finalResult = await simulatePaymentAndRetry();
             deductBalance(price);
         }
@@ -252,10 +262,14 @@ export default function SimulationPage() {
         setPaymentFlowStep(3);
         await new Promise(r => setTimeout(r, 600));
         
+        console.log('[x402] Consultation payment decision:', { paymentMode, isConnected, isCorrectNetwork });
+        
         let finalResult;
         if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+            console.log('[x402] Using REAL payment for consultation');
             finalResult = await sendPaymentAndRetry();
         } else {
+            console.log('[x402] Using SIMULATED payment for consultation');
             finalResult = await simulatePaymentAndRetry();
             deductBalance(parseFloat(CONSULTATION_FEE));
         }
@@ -346,10 +360,14 @@ export default function SimulationPage() {
         setPaymentFlowStep(3);
         await new Promise(r => setTimeout(r, 600));
         
+        console.log('[x402] Lab order payment decision:', { paymentMode, isConnected, isCorrectNetwork });
+        
         let finalResult;
         if (paymentMode === "real" && isConnected && isCorrectNetwork) {
+            console.log('[x402] Using REAL payment for lab order');
             finalResult = await sendPaymentAndRetry();
         } else {
+            console.log('[x402] Using SIMULATED payment for lab order');
             finalResult = await simulatePaymentAndRetry();
             deductBalance(price);
         }
