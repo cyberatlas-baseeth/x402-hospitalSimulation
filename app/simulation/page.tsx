@@ -137,16 +137,23 @@ export default function SimulationPage() {
         // Wait for user to close the modal before continuing
         await waitForPaymentFlowClose();
 
+        // Small delay to ensure modal is fully closed
+        await new Promise(r => setTimeout(r, 100));
+
         deductBalance(price);
 
         NAMES.doctor = expert.name;
         AVATARS.doctor = expert.avatar;
 
-        await new Promise((r) => setTimeout(r, 500));
+        // Transition to step 1 first so chat container renders
+        setStep(1);
+        
+        // Small delay to allow step change to render
+        await new Promise(r => setTimeout(r, 100));
+
         addMessage("patient", `I'd like to consult with ${expert.name} today.`);
         await simulateTyping("doctor", `Hello! I'm ${expert.name}, your AI medical assistant. I'm ready to help you. What symptoms are you experiencing?`, 1500);
 
-        setStep(1);
         setActionLoading(false);
     };
 
