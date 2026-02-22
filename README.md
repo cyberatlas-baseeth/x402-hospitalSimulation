@@ -1,4 +1,4 @@
-# x402 Healthcare Payment Simulation
+# x402 Payment Simulation
 
 A Next.js application demonstrating the **x402 protocol** with real blockchain payments on **Base Sepolia**. This project showcases an interactive visual simulation with Matrix-inspired aesthetics, MetaMask integration, and on-chain payment verification.
 
